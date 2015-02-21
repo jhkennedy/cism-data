@@ -35,10 +35,11 @@ nc_insar    = Dataset( 'data/InSAR/Joughin2012/greenland_vel_mosaic500.nc' , 'r'
 #=====================
 proj_latlong  = pyproj.Proj(proj='latlong', datum='WGS84') 
     # needed to convert between projections
-proj_bamber   = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +ellps=WGS84') 
+proj_bamber   = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +ellps=WGS84 +units=m') 
     # basic bamber projection
-proj_epsg3413 = pyproj.Proj('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+proj_epsg3413 = pyproj.Proj('+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=315.0 +k_0=1.0 +ellps=WGS84 +units=m')
     # InSAR data in this projections
+proj_wat   = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +ellps=WGS84 +units=m') 
 
 # EIGEN-GL04C referenced data
 #----------------------------
@@ -75,7 +76,7 @@ base_x[:] = bamber_x[:]
 copy_atts(bamber_x, base_x) #FIXME: units say km, but it's actuall in m
 
 # create some grids for interpolation
-base_y_grid, base_x_grid = scipy.meshgrid(base_x[:], base_y[:]) #yx then xy is correct
+base_y_grid, base_x_grid = scipy.meshgrid(base_y[:], base_x[:], indexing='ij') 
 
 #==== SeaRise Data ====
 # this is a 1km dataset
@@ -146,7 +147,7 @@ insar_ex = nc_insar.variables['ex']
 
 
 # transform meshes
-insar_y_grid, insar_x_grid = scipy.meshgrid( insar_x[:], insar_y[:] ) #yx then xy correct
+insar_y_grid, insar_x_grid = scipy.meshgrid( insar_y[:], insar_x[:] , indexing='ij')
 
 insar_data = np.ndarray( (insar_ny, insar_nx) )
 insar_data[:,:] = insar_vy[:,:]
@@ -155,20 +156,43 @@ trans_y_grid, trans_x_grid = pyproj.transform(proj_bamber, proj_epsg3413, base_y
 trans_y_grid = trans_y_grid.reshape((base_ny,base_nx))
 trans_x_grid = trans_x_grid.reshape((base_ny,base_nx))
 
-####PROBLEMISWITHPROJECTION####
+trans_y = trans_y_grid[:,0]
+trans_x = trans_x_grid[0,:]
 
+#import matplotlib.pyplot as plt 
+#plt.imshow( insar_data[::-1,:])
+#plt.show()
+
+
+
+insar_corners_y = [insar_y[0],insar_y[0],insar_y[-1],insar_y[-1] ]
+insar_corners_x = [insar_x[0],insar_x[-1],insar_x[0],insar_x[-1] ]
+trans_corners_y = [trans_y[0],trans_y[0],trans_y[-1],trans_y[-1] ]
+trans_corners_x = [trans_x[0],trans_x[-1],trans_x[0],trans_x[-1] ]
+
+#import matplotlib.pyplot as plt
+#plt.figure(1)
+#plt.scatter( insar_corners_y, insar_corners_x, c='r' )
+#plt.scatter( trans_corners_y, trans_corners_x, c='g' )
+#plt.show()
+
+print(insar_corners_y)
+print(insar_corners_x)
+
+print(trans_corners_y)
+print(trans_corners_x)
 
 base_to_insar = interpolate.RectBivariateSpline( insar_y[:], insar_x[:], insar_data, s=0) # regular 2d linear interp. but faster
-
+#
 base_data = np.ndarray( (base_ny,base_nx) )
 base_data[:,:] = 0.
 for ii in range(0, base_nx):
     base_data[:,ii] = base_to_insar.ev(trans_y_grid[:,ii], trans_x_grid[:,ii] )
 
-print(trans_y_grid[1120,1754])
-print(trans_x_grid[1120,1754])
-print(base_data[1120,1754])
-print(base_to_insar(1120,1754))
+import matplotlib.pyplot as plt
+plt.figure(2)
+plt.imshow(base_data[::-1,:])
+plt.show()
 
 base_vy = nc_base.createVariable( 'vy', 'f4', ('y','x',) )
 base_vy[:,:] = base_data[:,:]
