@@ -1,0 +1,62 @@
+#!/bin/bash
+# this is run from within this directory -- or at least all created files are in this dir!
+# They are then coppied somewhere. 
+
+# remove old created files
+rm *.nc || exit -1
+
+# set some environment vatiables for intel machines
+source bootstrap.intel || exit -1
+
+# move the originals into this directory to start using them for stuff.
+cp originals/*.nc . || exit -1
+
+# compile something
+#ifort -I /opt/intel/netcdf4.3.0/include -L /opt/intel/netcdf4.3.0/lib refine_coarsen.F90 -lnetcdff -lnetcdf && ./a.out || exit -1
+
+# start consolidating data
+python merge_bamber_and_other.py || exit -1
+python merge_bamber_and_racmo.py || exit -1
+
+# convert joughin InSAR velocities to ??
+python convert_velocities.py || exit -1
+
+# compile coordtrans.c and use it to make coords.nc
+gcc -I /opt/netcdf4.3.0/include/ -I /opt/proj4/include/ -L /opt/netcdf4.3.0/lib/ -L /opt/proj4/lib/ coordtrans.c -lproj -lnetcdf && ./a.out || exit -1
+
+#  compile polar_sterio and inerp_velo_to_bamber_500m... seriously bad out file name.. and use it
+ifort -I /opt/intel/netcdf4.3.0/include -L /opt/intel/netcdf4.3.0/lib -xHost -O2 -openmp -real-size 64 polar_stereo.F90 interp_velo_to_bamber_500m.F90 -lnetcdff -lnetcdf && ./a.out || exit -1
+
+# rename some variables
+ncrename -v projection_x_coordinate,x Greenland_bedrock_topography_V3.nc || exit -1
+ncrename -v projection_y_coordinate,y Greenland_bedrock_topography_V3.nc || exit -1
+ncrename -v BedrockElevation,topg Greenland_bedrock_topography_V3.nc || exit -1
+ncrename -v IceThickness,thk Greenland_bedrock_topography_V3.nc || exit -1
+ncrename -v BedrockError,topgerr Greenland_bedrock_topography_V3.nc || exit -1
+ncrename -v SurfaceRMSE,usrfRMSE Greenland_bedrock_topography_V3.nc || exit -1
+
+# get the ice mask
+python bamber_mask_thk.py || exit -1
+
+# extract all the data we want and place in appropriate files. 
+ncks -O -v x,y,topg,thk,topgerr,bheatflx,artm,acab,usrf,usrfRMSE -d x,500,2000 -d y,100,2900 Greenland_bedrock_topography_V3.nc greenland_1km.nc || exit -1
+ncks -O -v x,y,vx,vy,ex,ey -d x,1000,4000 -d y,200,5800 greenland_vel_mosaic500_bambergrid.nc greenland_vel_mosaic500_bambergrid_reduced.nc || exit -1
+
+# coarsen our data
+python coarsen2x.py || exit -1
+
+# add the time dimention
+python add_time_dim.py || exit -1
+
+# bamber 500m to 1km 
+python downsample2x_velocity_easy.py || exit -1
+
+# timestamp our data
+mv greenland_1km_time.nc "greenland_1km_`date "+%Y_%m_%d"`.nc" || exit -1
+mv greenland_2km_time.nc "greenland_2km_`date "+%Y_%m_%d"`.nc" || exit -1
+mv greenland_4km_time.nc "greenland_4km_`date "+%Y_%m_%d"`.nc" || exit -1
+mv greenland_8km_time.nc "greenland_8km_`date "+%Y_%m_%d"`.nc" || exit -1
+
+# remove some base nc files
+rm -f greenland_?km.nc || exit -1
+
