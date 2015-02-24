@@ -312,7 +312,7 @@ base_x = nc_base.variables['x']
 base_nx = base_x[:].shape[0]
 
 
-nc_1km = Dataset('greenland_1km_'+stamp+'.mcb.nc', 'w')
+nc_1km = Dataset('complete/greenland_1km_'+stamp+'.mcb.nc', 'w')
 nc_1km.createDimension('time', None )
 nc_1km.createDimension('y1', base_ny)
 nc_1km.createDimension('x1', base_nx)
@@ -340,7 +340,7 @@ nc_base.close()
 #==== Stamp and coarsen ====
 # make 1, 2, 4 and 8 km data
 #===========================
-nc_1km = Dataset('greenland_1km_'+stamp+'.mcb.nc','r' )
+nc_1km = Dataset('complete/greenland_1km_'+stamp+'.mcb.nc','r' )
 
 y_1km = nc_1km.variables['y1']
 ny_1km = y_1km[:].shape[0]
@@ -355,7 +355,7 @@ for ii in range(0, len(coarse_list)):
     ny_coarse = y_1km[::skip].shape[0]
     nx_coarse = x_1km[::skip].shape[0]
 
-    nc_coarse = Dataset( 'greenland_'+coarse_list[ii]+'_'+stamp+'.mcb.nc','w' )
+    nc_coarse = Dataset( 'complete/greenland_'+coarse_list[ii]+'_'+stamp+'.mcb.nc','w' )
     nc_coarse.createDimension('time', None )
     nc_coarse.createDimension('y1', ny_coarse)
     nc_coarse.createDimension('x1', nx_coarse)
@@ -379,4 +379,24 @@ for ii in range(0, len(coarse_list)):
 
     nc_coarse.close()
 
+    # write config files
+    config_dict= {'REPLACE_EWN':str(nx_coarse), 
+                  'REPLACE_NSN':str(ny_coarse), 
+                  'REPLACE_DEW':str(skip*1000), 
+                  'REPLACE_DNS':str(skip*1000), 
+                  'REPLACE_NAME':'greenland_'+coarse_list[ii]+'_'+stamp+'.mcb.nc', 
+                  'REPLACE_OUT':'greenland_'+coarse_list[ii]+'_'+stamp+'.mcb.out.nc', 
+                  'REPLACE_KM':str(skip)+' km' }
+
+    base_config = open('greenland_base.mcb.config','r')
+    out_config  = open('complete/greenland_'+coarse_list[ii]+'.config','w')
+    for line in base_config :
+        for src, target in config_dict.iteritems() :
+            line = line.replace(src, target)
+        out_config.write(line)
+    
+    base_config.close()
+    out_config.close()
+
 nc_1km.close()
+
