@@ -37,8 +37,6 @@ nc_mask     = Dataset( 'data/Ice2Sea/greenland_geometry_icesheet_mask_Zurich.nc'
 # needed for the data 
 #=====================
 #NOTE: Bamber projection appears to not actually have any fasle northings or eastings. 
-proj_latlong  = pyproj.Proj(proj='latlong', datum='WGS84') 
-    # needed to convert between projections
 #proj_bamber   = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=-39.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +ellps=WGS84 +units=m') 
 proj_bamber   = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=-39.0 +k_0=1.0 +ellps=WGS84 +units=m') 
     # basic bamber projection
@@ -51,6 +49,7 @@ proj_epsg3413 = pyproj.Proj('+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_
 # (and within 10-20 cm in most places) so we use the egm08 projection which is available in proj4
 if not ( os.path.exists('data/BamberDEM/egm08_25.gtx') ):
     raise Exception("No data/BamberDEM/egm08_25.gtx ! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
+#NOTE: Bamber projection appears to not actually have any fasle northings or eastings. 
 #proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +geoidgrids=./data/BamberDEM/egm08_25.gtx')
 proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids=./data/BamberDEM/egm08_25.gtx')
 
@@ -193,12 +192,6 @@ massCon_nx = massCon_x[:].shape[0]
 # transform meshes
 massCon_y_grid, massCon_x_grid = scipy.meshgrid(massCon_y[::-1], massCon_x[:], indexing='ij')  # y fliped when compaired to Bamber
 
-#massCon_bed       = nc_massCon.variables['bed']
-#massCon_thickness = nc_massCon.variables['thickness']
-#massCon_surface   = nc_massCon.variables['surface']
-#massCon_errbed    = nc_massCon.variables['errbed']
-#massCon_mask      = mc_massCon.variables['mask']
-
 massCon_data = np.ndarray( (massCon_ny,massCon_nx) )
 trans_data   = np.ndarray( (massCon_ny,massCon_nx) )
 base_data    = np.ndarray( (base_ny,base_nx) )
@@ -245,13 +238,6 @@ for vv in range(0, len(var_list) ) :
 base_data[:,:]    = 0.
 
 massCon_errbed = nc_massCon.variables['errbed']
-
-#trans_x_grid, trans_y_grid = pyproj.transform(proj_epsg3413, proj_eigen_gl04c, massCon_x_grid.flatten(), massCon_y_grid.flatten())
-#trans_y_grid = trans_y_grid.reshape( (massCon_ny,massCon_nx) ) 
-#trans_x_grid = trans_x_grid.reshape( (massCon_ny,massCon_nx) ) 
-#
-#trans_y = trans_y_grid[:,0]
-#trans_x = trans_x_grid[0,:]
 
 massCon_to_base = interpolate.RectBivariateSpline( trans_y[:], trans_x[:], massCon_errbed[::-1,:], s=0) # regular 2d linear interp. but faster
                                                                             # y fliped when compaired to Bamber
@@ -417,4 +403,4 @@ for ii in range(0, len(coarse_list)):
     out_config.close()
 
 nc_1km.close()
-
+#==== and done! ====
