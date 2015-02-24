@@ -340,4 +340,43 @@ nc_base.close()
 #==== Stamp and coarsen ====
 # make 1, 2, 4 and 8 km data
 #===========================
+nc_1km = Dataset('greenland_1km_'+stamp+'.mcb.nc','r' )
 
+y_1km = nc_1km.variables['y1']
+ny_1km = y_1km[:].shape[0]
+
+x_1km = nc_1km.variables['x1']
+nx_1km = x_1km[:].shape[0]
+
+
+coarse_list = ['2km','4km','8km']
+for ii in range(0, len(coarse_list)):
+    skip = 2**(ii+1)
+    ny_coarse = y_1km[::skip].shape[0]
+    nx_coarse = x_1km[::skip].shape[0]
+
+    nc_coarse = Dataset( 'greenland_'+coarse_list[ii]+'_'+stamp+'.mcb.nc','w' )
+    nc_coarse.createDimension('time', None )
+    nc_coarse.createDimension('y1', ny_coarse)
+    nc_coarse.createDimension('x1', nx_coarse)
+
+    time_coarse = nc_coarse.createVariable('time', 'f4', ('time',))
+    y1_coarse   = nc_coarse.createVariable('y1',   'f4', ('y1',)  )
+    x1_coarse   = nc_coarse.createVariable('x1',   'f4', ('x1',)  )
+
+    copy_atts(y_1km, y1_coarse)
+    copy_atts(x_1km, x1_coarse)
+
+    y1_coarse[:] = y_1km[::skip]
+    x1_coarse[:] = x_1km[::skip]
+    time_coarse[0] = 0.
+
+    for var_name, var_data in nc_1km.variables.iteritems() : 
+        if (var_name != 'x1' and var_name != 'y1' and var_name != 'time'):
+            var_coarse = nc_coarse.createVariable(var_name, 'f4', ('time','y1','x1',))
+            var_coarse[0,:,:] = var_data[0,::skip,::skip]
+            copy_atts(var_data, var_coarse)
+
+    nc_coarse.close()
+
+nc_1km.close()
