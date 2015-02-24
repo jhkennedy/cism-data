@@ -15,7 +15,6 @@ Build a CISM dataset
 """
 # get the current time
 stamp = datetime.date.today().strftime("%Y_%m_%d")
-#basename='greenland_500km_'+stamp+'.mcb.nc'
 
 # create base data file
 nc_base = Dataset('greenland_1km.mcb.nc','w')
@@ -335,6 +334,25 @@ for var_name, var_data in nc_base.variables.iteritems() :
         copy_atts(var_data, var_1km)
 #copy_atts(var_data, var_1km)
 
+# write 1km config file
+config_dict= {'REPLACE_EWN':str(base_nx), 
+              'REPLACE_NSN':str(base_ny), 
+              'REPLACE_DEW':str(1000), 
+              'REPLACE_DNS':str(1000), 
+              'REPLACE_NAME':'greenland_1km_'+stamp+'.mcb.nc', 
+              'REPLACE_OUT':'greenland_1km_'+stamp+'.mcb.out.nc', 
+              'REPLACE_KM':'1 km' }
+
+base_config = open('greenland_base.mcb.config','r')
+out_config  = open('complete/greenland_1km.mcb.config','w')
+for line in base_config :
+    for src, target in config_dict.iteritems() :
+        line = line.replace(src, target)
+    out_config.write(line)
+
+base_config.close()
+out_config.close()
+
 nc_1km.close()
 nc_base.close()
 #==== Stamp and coarsen ====
@@ -389,7 +407,7 @@ for ii in range(0, len(coarse_list)):
                   'REPLACE_KM':str(skip)+' km' }
 
     base_config = open('greenland_base.mcb.config','r')
-    out_config  = open('complete/greenland_'+coarse_list[ii]+'.config','w')
+    out_config  = open('complete/greenland_'+coarse_list[ii]+'.mcb.config','w')
     for line in base_config :
         for src, target in config_dict.iteritems() :
             line = line.replace(src, target)
