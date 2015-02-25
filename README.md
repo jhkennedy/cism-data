@@ -8,20 +8,18 @@ is not included.
 Instructions
 ------------
 First, you will need to link or copy the data into the `data` directory or edit
-the file paths on lines 22 through 32. Currently they are set to be: 
+the file paths on lines 22 through 30. Currently they are set to be: 
 
 ```python
-# load in datasets
-nc_bamber   = Dataset( 'data/BamberDEM/Greenland_bedrock_topography_V3.nc', 'r') 
-nc_seaRise  = Dataset( 'data/SeaRise/Greenland1km.nc', 'r')
-nc_racmo2p0 = Dataset( 'data/RACMO2.0/Racmo2MeanSMB_1961-1990.nc', 'r')
-
-if not ( os.path.exists('data/InSAR/Joughin2012/greenland_vel_mosaic500.nc') ):
-    subprocess.call("python util/convert_velocities.py", shell=True)
-nc_insar    = Dataset( 'data/InSAR/Joughin2012/greenland_vel_mosaic500.nc' , 'r')
-
-nc_massCon  = Dataset('data/IceBridge/Greenland/MCdataset-2014-11-19.nc','r')
-nc_mask     = Dataset( 'data/Ice2Sea/greenland_geometry_icesheet_mask_Zurich.nc' , 'r'  )
+#==== Data Locations ====
+# Link data here or edit 
+#========================
+lc_bamber   = 'data/BamberDEM'           # file name: Greenland_bedrock_topography_V3.nc
+lc_seaRise  = 'data/SeaRise'             # file name: Greenland1km.nc
+lc_racmo2p0 = 'data/RACMO2.0'            # file name: Racmo2MeanSMB_1961-1990.nc
+lc_InSAR    = 'data/InSAR/Joughin2012'   # file name: greenland_vel_mosaic500.nc #NOTE:  will build this file from mosaicOffsets.* files
+lc_massCon  = 'data/IceBridge/Greenland' # file name: MCdataset-2014-11-19.nc
+lc_mask     = 'data/Ice2Sea'             # file name: ice2sea_Greenland_geometry_icesheet_mask_Zurich.nc
 ```
 
 
@@ -44,4 +42,4 @@ Authors:
 [Matt Hoffman](https://github.com/matthewhoffman), and 
 [Matt Norman](https://github.com/matthewhoffman). 
 
-Some scripts were reused are in the `util/` directory while the rest live in `util/old/`. 
+Some scripts were reused (with minor edits) and are in the `util/` directory while the rest live in `util/old/`. 

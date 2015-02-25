@@ -1,6 +1,11 @@
+import sys
 from numpy import *
 from struct import unpack
 from netCDF4 import Dataset
+
+location = sys.argv[1].rstrip('/') # 0 arg is calling this script, 1 is first input!
+
+print(location)
 
 x0 = -645*1000
 y0 = -3370*1000
@@ -8,10 +13,10 @@ dx = 500
 dy = 500
 nx = 3010
 ny = 5460
-file = './originals/joughin-InSAR-2012/mosaicOffsets'
+file = location+'/mosaicOffsets'
 
 print('Creating netCDF file')
-nc = Dataset('greenland_vel_mosaic500.nc', 'w', format='NETCDF4')
+nc = Dataset(location+'/greenland_vel_mosaic500.nc', 'w', format='NETCDF4')
 x_d  = nc.createDimension('x', nx)
 y_d  = nc.createDimension('y', ny)
 x_v  = nc.createVariable('x' ,'f4',('x',))

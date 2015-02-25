@@ -19,39 +19,53 @@ stamp = datetime.date.today().strftime("%Y_%m_%d")
 # create base data file
 nc_base = Dataset('greenland_1km.mcb.nc','w')
 
+#==== Data Locations ====
+# Link data here or edit 
+#========================
+lc_bamber   = 'data/BamberDEM'           # file name: Greenland_bedrock_topography_V3.nc
+lc_seaRise  = 'data/SeaRise'             # file name: Greenland1km.nc
+lc_racmo2p0 = 'data/RACMO2.0'            # file name: Racmo2MeanSMB_1961-1990.nc
+lc_InSAR    = 'data/InSAR/Joughin2012'   # file name: greenland_vel_mosaic500.nc #NOTE:  will build this file from mosaicOffsets.* files
+lc_massCon  = 'data/IceBridge/Greenland' # file name: MCdataset-2014-11-19.nc
+lc_mask     = 'data/Ice2Sea'             # file name: ice2sea_Greenland_geometry_icesheet_mask_Zurich.nc
+
+# Force no trailing slashes!
+lc_bamber   = lc_bamber.rstrip('/') 
+lc_seaRise  = lc_seaRise.rstrip('/')
+lc_racmo2p0 = lc_racmo2p0.rstrip('/')
+lc_InSAR    = lc_InSAR.rstrip('/')
+lc_massCon  = lc_massCon.rstrip('/')
+lc_mask     = lc_mask.rstrip('/')
+
 # load in datasets
-nc_bamber   = Dataset( 'data/BamberDEM/Greenland_bedrock_topography_V3.nc', 'r') 
-nc_seaRise  = Dataset( 'data/SeaRise/Greenland1km.nc', 'r')
-nc_racmo2p0 = Dataset( 'data/RACMO2.0/Racmo2MeanSMB_1961-1990.nc', 'r')
+nc_bamber   = Dataset( lc_bamber+'/Greenland_bedrock_topography_V3.nc', 'r') 
+nc_seaRise  = Dataset( lc_seaRise+'/Greenland1km.nc', 'r')
+nc_racmo2p0 = Dataset( lc_racmo2p0+'/Racmo2MeanSMB_1961-1990.nc', 'r')
 
-if not ( os.path.exists('data/InSAR/Joughin2012/greenland_vel_mosaic500.nc') ):
-    subprocess.call("python util/convert_velocities.py", shell=True)
-nc_insar    = Dataset( 'data/InSAR/Joughin2012/greenland_vel_mosaic500.nc' , 'r')
+if not ( os.path.exists(lc_InSAR+'/greenland_vel_mosaic500.nc') ):
+    subprocess.call("python util/convert_velocities.py "+lc_InSAR, shell=True)
+nc_insar    = Dataset( lc_InSAR+'/greenland_vel_mosaic500.nc' , 'r')
 
-nc_massCon  = Dataset('data/IceBridge/Greenland/MCdataset-2014-11-19.nc','r')
-nc_mask     = Dataset( 'data/Ice2Sea/greenland_geometry_icesheet_mask_Zurich.nc' , 'r'  )
+nc_massCon  = Dataset(lc_massCon+'/MCdataset-2014-11-19.nc','r')
+nc_mask     = Dataset( lc_mask+'/ice2sea_Greenland_geometry_icesheet_mask_Zurich.nc' , 'r'  )
 
 
 #==== Projections ====
 # All the projections 
 # needed for the data 
 #=====================
-#NOTE: Bamber projection appears to not actually have any fasle northings or eastings. 
-#proj_bamber   = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=-39.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +ellps=WGS84 +units=m') 
-proj_bamber   = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=-39.0 +k_0=1.0 +ellps=WGS84 +units=m') 
-    # basic bamber projection
 proj_epsg3413 = pyproj.Proj('+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +units=m')
     # InSAR data in this projections
 
-# EIGEN-GL04C referenced data
+# EIGEN-GL04C referenced data:
 #----------------------------
 # unfortunately, bed, surface, and thickness data is referenced to EIGEN-GL04C which doesn't exist in proj4. However, EGM2008 should be within ~1m everywhere
 # (and within 10-20 cm in most places) so we use the egm08 projection which is available in proj4
-if not ( os.path.exists('data/BamberDEM/egm08_25.gtx') ):
-    raise Exception("No data/BamberDEM/egm08_25.gtx ! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
+if not ( os.path.exists(lc_bamber+'/egm08_25.gtx') ):
+    raise Exception("No "+lc_bamber+"/egm08_25.gtx ! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
 #NOTE: Bamber projection appears to not actually have any fasle northings or eastings. 
-#proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +geoidgrids=./data/BamberDEM/egm08_25.gtx')
-proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids=./data/BamberDEM/egm08_25.gtx')
+#proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +geoidgrids='+lc_bamber+'/egm08_25.gtx')
+proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids='+lc_bamber+'/egm08_25.gtx')
 
 #===== Bamber DEM =====
 # this is a 1km dataset
