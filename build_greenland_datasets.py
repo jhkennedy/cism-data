@@ -301,14 +301,20 @@ base_usrf[:,:] = thk_data + topg_data
 
 nc_mask.close()
 nc_base.close()
-#==== add time dim ====
-# apply to all the vars
-#======================
+#==== add time dim and shrink ====
+# apply to all the variables and  
+# shrink to size around ice sheet 
+#=================================
+
+# shrink dataset to the ice sheet
+y_shrink = [100,2900+1] #NOTE: python stop exclusive, nco stop inclusive!
+x_shrink = [500,2000+1] #NOTE: python stop exclusive, nco stop inclusive!
+
 nc_base = Dataset('greenland_1km.mcb.nc','r')
 base_y = nc_base.variables['y']
-base_ny = base_y[:].shape[0]
+base_ny = base_y[ y_shrink[0]:y_shrink[1] ].shape[0]
 base_x = nc_base.variables['x']
-base_nx = base_x[:].shape[0]
+base_nx = base_x[ x_shrink[0]:x_shrink[1] ].shape[0]
 
 
 nc_1km = Dataset('complete/greenland_1km_'+stamp+'.mcb.nc', 'w')
@@ -323,14 +329,14 @@ x1   = nc_1km.createVariable('x1',   'f4', ('x1',)  )
 copy_atts(base_y, y1)
 copy_atts(base_x, x1)
 
-y1[:] = base_y[:]
-x1[:] = base_x[:]
+y1[:] = base_y[ y_shrink[0]:y_shrink[1] ]
+x1[:] = base_x[ x_shrink[0]:x_shrink[1] ]
 time[0] = 0.
 
 for var_name, var_data in nc_base.variables.iteritems() : 
     if (var_name != 'x' and var_name != 'y'):
         var_1km = nc_1km.createVariable(var_name, 'f4', ('time','y1','x1',))
-        var_1km[0,:,:] = var_data[:,:]
+        var_1km[0,:,:] = var_data[ y_shrink[0]:y_shrink[1] , x_shrink[0]:x_shrink[1] ]
         copy_atts(var_data, var_1km)
 #copy_atts(var_data, var_1km)
 
