@@ -37,7 +37,7 @@ time-stamped `.mcb.nc` and `.mcb.config` files in the `complete/` directory for
 
 Authors:
 --------
-[Joseph H. Kennedy](https://github.com/jhkennedy), reworked scripts by 
+[Joseph H. Kennedy](https://github.com/jhkennedy) reworked scripts by 
 [Steven F. Price](https://github.com/stephenprice), 
 [Matt Hoffman](https://github.com/matthewhoffman), and 
 [Matt Norman](https://github.com/matthewhoffman). 
