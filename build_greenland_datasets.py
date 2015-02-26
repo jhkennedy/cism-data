@@ -1,9 +1,11 @@
 import os
+import datetime
+import subprocess
+import argprase
+
 import math
 import scipy
 import pyproj
-import datetime
-import subprocess
 import numpy as np
 from netCDF4 import Dataset
 from scipy import interpolate
@@ -13,11 +15,24 @@ from ncfunc import copy_atts
 """
 Build a CISM dataset
 """
+# parse the command line arguments
+# -h or --help automatically included!
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", "--verbose", help="Increase the output verbosity", action="store_true")
+parser.add_argument("-q", "--quiet",   help="Run silently",                  action="store_true")
+
+args = parser.parse_args()
+if not args.quiet :
+    print("\nBuilding the Greenland datasets in the Bamber projection.")
+    print(  "=========================================================\n")
+
 # get the current time
 stamp = datetime.date.today().strftime("%Y_%m_%d")
 
 # create base data file
 nc_base = Dataset('greenland_1km.mcb.nc','w')
+if args.verbose :
+    print("Building the base dataset: greenland_1km.mcb.nc")
 
 #==== Data Locations ====
 # Link data here or edit 
@@ -67,6 +82,8 @@ if not ( os.path.exists(lc_bamber+'/egm08_25.gtx') ):
 #proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +geoidgrids='+lc_bamber+'/egm08_25.gtx')
 proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids='+lc_bamber+'/egm08_25.gtx')
 
+if not args.quiet :
+    print("All datafiles found!\n")
 #===== Bamber DEM =====
 # this is a 1km dataset
 #======================
