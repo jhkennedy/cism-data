@@ -173,7 +173,7 @@ for vv in ['vy','vx','ey','ex'] :
     insar_var = nc_insar.variables[ vv ]
     insar_data[:,:] = insar_var[:,:]
 
-    insar_to_base = interpolate.RectBivariateSpline( insar_y[:], insar_x[:], insar_data, s=0) # regular 2d linear interp. but faster
+    insar_to_base = interpolate.RectBivariateSpline( insar_y[:], insar_x[:], insar_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
 
     for ii in range(0, base_nx):
         base_data[:,ii] = insar_to_base.ev(trans_y_grid[:,ii], trans_x_grid[:,ii] )
@@ -214,7 +214,7 @@ for vv in range(0, len(var_list) ) :
     massCon_var = nc_massCon.variables[var]
     massCon_data[:,:] = massCon_var[::-1,:] # y fliped when compaired to Bamber
 
-    massCon_to_base = interpolate.RectBivariateSpline( massCon_y[::-1], massCon_x[:], massCon_data, s=0) # regular 2d linear interp. but faster
+    massCon_to_base = interpolate.RectBivariateSpline( massCon_y[::-1], massCon_x[:], massCon_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
 
     for ii in range(0, base_nx):
         base_data[:,ii] = massCon_to_base.ev(trans_y_grid[:,ii], trans_x_grid[:,ii] )
