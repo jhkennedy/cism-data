@@ -1,9 +1,12 @@
 import os
+import sys
+import datetime
+import subprocess
+import argparse
+
 import math
 import scipy
 import pyproj
-import datetime
-import subprocess
 import numpy as np
 from netCDF4 import Dataset
 from scipy import interpolate
@@ -13,47 +16,86 @@ from ncfunc import copy_atts
 """
 Build a CISM dataset
 """
-# get the current time
-stamp = datetime.date.today().strftime("%Y_%m_%d")
-
-# create base data file
-nc_base = Dataset('greenland_1km.mcb.nc','w')
-
 #==== Data Locations ====
 # Link data here or edit 
 #========================
-lc_bamber   = 'data/BamberDEM'           # file name: Greenland_bedrock_topography_V3.nc
-lc_seaRise  = 'data/SeaRise'             # file name: Greenland1km.nc
-lc_racmo2p0 = 'data/RACMO2.0'            # file name: Racmo2MeanSMB_1961-1990.nc
-lc_InSAR    = 'data/InSAR/Joughin2012'   # file name: greenland_vel_mosaic500.nc #NOTE:  will build this file from mosaicOffsets.* files
-lc_massCon  = 'data/IceBridge/Greenland' # file name: MCdataset-2014-11-19.nc
-lc_mask     = 'data/Ice2Sea'             # file name: ice2sea_Greenland_geometry_icesheet_mask_Zurich.nc
+lc_bamber   = 'data/BamberDEM/Greenland_bedrock_topography_V3.nc'
+lc_seaRise  = 'data/SeaRise/Greenland1km.nc'
+lc_racmo2p0 = 'data/RACMO2.0/Racmo2MeanSMB_1961-1990.nc'
+lc_InSAR    = 'data/InSAR/Joughin2012/greenland_vel_mosaic500.nc' #NOTE:  will build this file from mosaicOffsets.* files
+lc_massCon  = 'data/IceBridge/Greenland/MCdataset-2014-11-19.nc'
+lc_mask     = 'data/Ice2Sea/ice2sea_Greenland_geometry_icesheet_mask_Zurich.nc'
 
-# Force no trailing slashes!
-lc_bamber   = lc_bamber.rstrip('/') 
-lc_seaRise  = lc_seaRise.rstrip('/')
-lc_racmo2p0 = lc_racmo2p0.rstrip('/')
-lc_InSAR    = lc_InSAR.rstrip('/')
-lc_massCon  = lc_massCon.rstrip('/')
-lc_mask     = lc_mask.rstrip('/')
+
+#==== SETUP ====
+# get args, time
+# load data sets
+#===============
+stamp = datetime.date.today().strftime("%Y_%m_%d")
+
+# parse the command line arguments
+# -h or --help automatically included!
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", "--verbose", help="Increase the output verbosity", action="store_true")
+parser.add_argument("-q", "--quiet",   help="Run silently",                  action="store_true")
+
+args = parser.parse_args()
+if args.quiet and args.verbose :
+    print("I'm sorry, I don't know how to be quiet and verbose.") 
+    sys.exit(2)
+
+if not args.quiet :
+    print("\nBuilding the Greenland datasets in the Bamber projection.")
+    print(  "=========================================================\n")
+
+# create base data file
+nc_base = Dataset('greenland_1km.mcb.nc','w')
+if args.verbose :
+    print("Building the base dataset: greenland_1km.mcb.nc\n")
 
 # load in datasets
-nc_bamber   = Dataset( lc_bamber+'/Greenland_bedrock_topography_V3.nc', 'r') 
-nc_seaRise  = Dataset( lc_seaRise+'/Greenland1km.nc', 'r')
-nc_racmo2p0 = Dataset( lc_racmo2p0+'/Racmo2MeanSMB_1961-1990.nc', 'r')
+if not args.quiet :
+    print("Loading the datasets...\n")
 
-if not ( os.path.exists(lc_InSAR+'/greenland_vel_mosaic500.nc') ):
-    subprocess.call("python util/convert_velocities.py "+lc_InSAR, shell=True)
-nc_insar    = Dataset( lc_InSAR+'/greenland_vel_mosaic500.nc' , 'r')
+nc_bamber   = Dataset( lc_bamber, 'r') 
+if args.verbose :
+    print("Found Bamber DEM")
 
-nc_massCon  = Dataset(lc_massCon+'/MCdataset-2014-11-19.nc','r')
-nc_mask     = Dataset( lc_mask+'/ice2sea_Greenland_geometry_icesheet_mask_Zurich.nc' , 'r'  )
+nc_seaRise  = Dataset( lc_seaRise, 'r')
+if args.verbose :
+    print("Found SeaRise data")
+
+nc_racmo2p0 = Dataset( lc_racmo2p0, 'r')
+if args.verbose :
+    print("Found RACMO 2.0 data")
+
+if not ( os.path.exists(lc_InSAR) ):
+    if args.verbose :
+        print("\n Building InSAR velocity dataset...\n")
+    subprocess.call("python util/convert_velocities.py "+os.path.dirname(lc_InSAR), shell=True)
+nc_insar    = Dataset( lc_InSAR , 'r')
+if args.verbose :
+    print("Found InSAR data")
+
+nc_massCon  = Dataset(lc_massCon,'r')
+if args.verbose :
+    print("Found Mass Conserving Bed  data")
+
+nc_mask     = Dataset( lc_mask, 'r'  )
+if args.verbose :
+    print("Found Zurich mask")
+
+if args.verbose :
+    print("\n All datafiles found!\n")
 
 
 #==== Projections ====
 # All the projections 
 # needed for the data 
 #=====================
+if not args.quiet :
+    print("Building the projections..."),
+    
 proj_epsg3413 = pyproj.Proj('+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +units=m')
     # InSAR data in this projections
 
@@ -61,15 +103,21 @@ proj_epsg3413 = pyproj.Proj('+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_
 #----------------------------
 # unfortunately, bed, surface, and thickness data is referenced to EIGEN-GL04C which doesn't exist in proj4. However, EGM2008 should be within ~1m everywhere
 # (and within 10-20 cm in most places) so we use the egm08 projection which is available in proj4
-if not ( os.path.exists(lc_bamber+'/egm08_25.gtx') ):
-    raise Exception("No "+lc_bamber+"/egm08_25.gtx ! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
+path_bamber = os.path.dirname(lc_bamber)
+if not ( os.path.exists(path_bamber+'/egm08_25.gtx') ):
+    raise Exception("No "+path_bamber+"/egm08_25.gtx ! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
 #NOTE: Bamber projection appears to not actually have any fasle northings or eastings. 
-#proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +geoidgrids='+lc_bamber+'/egm08_25.gtx')
-proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids='+lc_bamber+'/egm08_25.gtx')
+#proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
+proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
 
+if not args.quiet :
+    print("   Done!\n")
 #===== Bamber DEM =====
 # this is a 1km dataset
 #======================
+if not args.quiet :
+    print("building the base grid..."),
+
 bamber_y = nc_bamber.variables['projection_y_coordinate']
 bamber_ny = bamber_y[:].shape[0] # number of y points for 1km grid
 
@@ -95,10 +143,14 @@ copy_atts(bamber_x, base_x) #FIXME: units say km, but it's actuall in m
 
 # create some grids for interpolation
 base_y_grid, base_x_grid = scipy.meshgrid(base_y[:], base_x[:], indexing='ij') 
-
+if not args.quiet :
+    print("   done!")
 #==== SeaRise Data ====
 # this is a 1km dataset
 #======================
+if not args.quiet :
+    print("Getting bheatflx and presartm from the SeaRise data.")
+
 seaRise_y = nc_seaRise.variables['y']
 seaRise_ny = seaRise_y[:].shape[0]
 
@@ -116,6 +168,8 @@ seaRise_data[:,:] = 0.
 seaRise_bheatflx = nc_seaRise.variables['bheatflx']
 seaRise_data[ seaRise_y_equal_bamber:seaRise_y_equal_bamber+seaRise_ny , seaRise_x_equal_bamber:seaRise_x_equal_bamber+seaRise_nx ] = -seaRise_bheatflx[0,:,:] # invert sign!
 
+if args.verbose :
+    print("   writing bheatflx to base.")
 base_bheatflx = nc_base.createVariable('bheatflx', 'f4', ('y','x',) )
 base_bheatflx[:,:] = seaRise_data[:,:] # base = bamber 1km
 copy_atts(seaRise_bheatflx, base_bheatflx)
@@ -126,14 +180,19 @@ seaRise_data[:,:] = 0.
 seaRise_presartm = nc_seaRise.variables['presartm']
 seaRise_data[ seaRise_y_equal_bamber:seaRise_y_equal_bamber+seaRise_ny , seaRise_x_equal_bamber:seaRise_x_equal_bamber+seaRise_nx ] = seaRise_presartm[0,:,:]
 
+if args.verbose :
+    print("   writing artm to base.")
 base_artm = nc_base.createVariable('artm', 'f4', ('y','x',) )
 base_artm[:,:] = seaRise_data[:,:] # base = bamber 1km
 copy_atts(seaRise_presartm, base_artm)
 
 nc_seaRise.close()
+
 #==== RACMO2.0 Data ====
 # this is a 1km dataset 
 #=======================
+if not args.quiet :
+    print("Getting acab from the RACMO 2.0 data.")
 racmo2p0_data = np.ndarray( (base_ny, base_nx) )
 
 racmo2p0_data[:,:] = 0.
@@ -142,21 +201,27 @@ racmo2p0_data[:,:] = racmo2p0_smb[:,::-1].transpose() / 910.
 racmo2p0_data = np.ma.masked_invalid(racmo2p0_data) # find invalid data and create a mask
 racmo2p0_data = racmo2p0_data.filled(0.)            # fill invalid data with zeros
 
+if args.verbose :
+    print("   writing acab to base.")
 base_acab = nc_base.createVariable( 'acab', 'f4', ('y','x',) )
 base_acab[:,:] = racmo2p0_data[:,:]
 copy_atts(racmo2p0_smb, base_acab) #FIXME: check atribute units -- divided by 910 earlier
 
 nc_racmo2p0.close()
+
 #==== InSAR velocity Data ====
 # this is a 500m dataset in   
 # the ESPG-3413 projection    
 #=============================
+if not args.quiet :
+    print("Getting vy, vx, ey, and ex from the InSAR data.")
 insar_y = nc_insar.variables['y']
 insar_ny = insar_y[:].shape[0]
 
 insar_x = nc_insar.variables['x']
 insar_nx = insar_x[:].shape[0]
 
+# transform meshes. 
 trans_x_grid, trans_y_grid = pyproj.transform(proj_eigen_gl04c, proj_epsg3413, base_x_grid.flatten(), base_y_grid.flatten())
 trans_y_grid = trans_y_grid.reshape((base_ny,base_nx))
 trans_x_grid = trans_x_grid.reshape((base_ny,base_nx))
@@ -189,6 +254,7 @@ for vv in ['vy','vx','ey','ex'] :
     copy_atts(insar_var, base_var)
 
 nc_insar.close()
+
 #==== Mass Conserving Bed Data ===
 # This is the new (2015) bed data 
 #=================================
@@ -252,6 +318,7 @@ temp_y_grid = None
 temp_x_grid = None
 temp_data   = None
 nc_massCon.close()
+
 #==== Zurich mask ====
 # apply mask, and get 
 # new surface variable
@@ -275,6 +342,7 @@ base_usrf[:,:] = thk_data + topg_data
 
 nc_mask.close()
 nc_base.close()
+
 #==== add time dim and shrink ====
 # apply to all the variables and  
 # shrink to size around ice sheet 
@@ -335,6 +403,7 @@ out_config.close()
 
 nc_1km.close()
 nc_base.close()
+
 #==== Stamp and coarsen ====
 # make 1, 2, 4 and 8 km data
 #===========================
@@ -345,7 +414,6 @@ ny_1km = y_1km[:].shape[0]
 
 x_1km = nc_1km.variables['x1']
 nx_1km = x_1km[:].shape[0]
-
 
 coarse_list = ['2km','4km','8km']
 for ii in range(0, len(coarse_list)):
@@ -397,4 +465,5 @@ for ii in range(0, len(coarse_list)):
     out_config.close()
 
 nc_1km.close()
+
 #==== and done! ====
