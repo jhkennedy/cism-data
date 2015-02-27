@@ -76,7 +76,7 @@ bamber_ny = bamber_y[:].shape[0] # number of y points for 1km grid
 bamber_x = nc_bamber.variables['projection_x_coordinate']
 bamber_nx = bamber_x[:].shape[0] # number of x points for 1km grid
 
-# make bamber 500m grid for base
+# make bamber 1km grid for base
 base_ny = bamber_ny
 base_nx = bamber_nx
 
@@ -157,15 +157,10 @@ insar_ny = insar_y[:].shape[0]
 insar_x = nc_insar.variables['x']
 insar_nx = insar_x[:].shape[0]
 
-# transform meshes
-insar_y_grid, insar_x_grid = scipy.meshgrid( insar_y[:], insar_x[:] , indexing='ij')
-
-trans_x_grid, trans_y_grid = pyproj.transform(proj_epsg3413, proj_eigen_gl04c, insar_x_grid.flatten(), insar_y_grid.flatten())
-trans_y_grid = trans_y_grid.reshape((insar_ny,insar_nx))
-trans_x_grid = trans_x_grid.reshape((insar_ny,insar_nx))
-
-trans_y = trans_y_grid[:,0]
-trans_x = trans_x_grid[0,:]
+trans_x_grid, trans_y_grid = pyproj.transform(proj_eigen_gl04c, proj_epsg3413, base_x_grid.flatten(), base_y_grid.flatten())
+trans_y_grid = trans_y_grid.reshape((base_ny,base_nx))
+trans_x_grid = trans_x_grid.reshape((base_ny,base_nx))
+#NOTE: These are used later. 
 
 insar_data = np.ndarray( (insar_ny, insar_nx) )
 base_data = np.ndarray( (base_ny,base_nx) )
@@ -178,20 +173,21 @@ for vv in ['vy','vx','ey','ex'] :
     insar_var = nc_insar.variables[ vv ]
     insar_data[:,:] = insar_var[:,:]
 
-    insar_to_base = interpolate.RectBivariateSpline( trans_y[:], trans_x[:], insar_data, s=0) # regular 2d linear interp. but faster
+    insar_to_base = interpolate.RectBivariateSpline( insar_y[:], insar_x[:], insar_data, s=0) # regular 2d linear interp. but faster
 
     for ii in range(0, base_nx):
-        base_data[:,ii] = insar_to_base.ev(base_y_grid[:,ii], base_x_grid[:,ii] )
+        base_data[:,ii] = insar_to_base.ev(trans_y_grid[:,ii], trans_x_grid[:,ii] )
+    
+    data_min = np.amin( insar_data[ insar_data[:,:] != -2.e9] )
+    data_max = np.amax( insar_data[ insar_data[:,:] != -2.e9] )
 
+    data_mask = np.ma.masked_outside(base_data, data_min, data_max)
+    base_data[ data_mask.mask ] = -2.e9
+    
     base_var = nc_base.createVariable( vv, 'f4', ('y','x',) )
     base_var[:,:] = base_data[:,:]
     copy_atts(insar_var, base_var)
 
-# drop temp. variables
-trans_y_grid = None
-trans_x_grid = None
-trans_y = None
-trans_x = None
 nc_insar.close()
 #==== Mass Conserving Bed Data ===
 # This is the new (2015) bed data 
@@ -203,39 +199,43 @@ massCon_ny = massCon_y[:].shape[0]
 massCon_x = nc_massCon.variables['x']
 massCon_nx = massCon_x[:].shape[0]
 
-# transform meshes
-massCon_y_grid, massCon_x_grid = scipy.meshgrid(massCon_y[::-1], massCon_x[:], indexing='ij')  # y fliped when compaired to Bamber
-
 massCon_data = np.ndarray( (massCon_ny,massCon_nx) )
-trans_data   = np.ndarray( (massCon_ny,massCon_nx) )
 base_data    = np.ndarray( (base_ny,base_nx) )
+temp_data    = np.ndarray( (base_ny,base_nx) )
 
-var_list       = [ 'thickness', 'bed' ]
-rename_massCon = [ 'thk',       'topg']
+var_list       = [ 'thickness', 'bed',  'errbed' ]
+rename_massCon = [ 'thk',       'topg', 'topgerr']
 for vv in range(0, len(var_list) ) :
     var = var_list[vv]
     massCon_data[:,:] = 0.
-    trans_data[:,:]   = 0.
     base_data[:,:]    = 0.
+    temp_data[:,:]    = 0.
 
     massCon_var = nc_massCon.variables[var]
     massCon_data[:,:] = massCon_var[::-1,:] # y fliped when compaired to Bamber
 
-    trans_x_grid, trans_y_grid, trans_data = pyproj.transform(proj_epsg3413, proj_eigen_gl04c, massCon_x_grid.flatten(), massCon_y_grid.flatten(), massCon_data.flatten())
-    trans_data   =   trans_data.reshape( (massCon_ny,massCon_nx) )
-    trans_y_grid = trans_y_grid.reshape( (massCon_ny,massCon_nx) ) 
-    trans_x_grid = trans_x_grid.reshape( (massCon_ny,massCon_nx) ) 
-
-    trans_y = trans_y_grid[:,0]
-    trans_x = trans_x_grid[0,:]
-    
-
-    massCon_to_base = interpolate.RectBivariateSpline( trans_y[:], trans_x[:], trans_data, s=0) # regular 2d linear interp. but faster
+    massCon_to_base = interpolate.RectBivariateSpline( massCon_y[::-1], massCon_x[:], massCon_data, s=0) # regular 2d linear interp. but faster
 
     for ii in range(0, base_nx):
-        base_data[:,ii] = massCon_to_base.ev(base_y_grid[:,ii], base_x_grid[:,ii] )
+        base_data[:,ii] = massCon_to_base.ev(trans_y_grid[:,ii], trans_x_grid[:,ii] )
     
+    # This is only needed for data that is actually referenced from the EIGEN-GL04C Geoid -- all topographical 'z' data. Not needed if not 'z' data.
+    if (var_list[vv] != 'errbed') :
+        temp_x_grid, temp_y_grid, temp_data = pyproj.transform(proj_eigen_gl04c, proj_epsg3413, trans_x_grid.flatten(), trans_y_grid.flatten(), base_data.flatten())
+        temp_data = temp_data.reshape((base_ny,base_nx))
+        base_data[:,:] = temp_data[:,:]
     
+    if (var_list[vv] == 'thickness') :
+        bad_val = 0
+    else :
+        bad_val = -9999
+
+    data_min = np.amin( massCon_data[ massCon_data[:,:] != bad_val] )
+    data_max = np.amax( massCon_data[ massCon_data[:,:] != bad_val] )
+
+    data_mask = np.ma.masked_outside(base_data, data_min, data_max)
+    base_data[ data_mask.mask ] = bad_val
+
     base_var = nc_base.createVariable( rename_massCon[vv], 'f4', ('y','x',) )
     base_var[:,:] = base_data[:,:]
     #copy_atts(massCon_var, base_var)
@@ -244,40 +244,14 @@ for vv in range(0, len(var_list) ) :
     for ii in range(len(atts)):
         if (atts[ii] != '_FillValue'):
             base_var.setncattr(atts[ii], massCon_var.getncattr(atts[ii]))
-        #else:
-        #    base_var.setncattr('_FillValue', -9999.)
-
-# Now get bed error -- not in for loop because not z data!
-#---------------------------------------------------------
-base_data[:,:]    = 0.
-
-massCon_errbed = nc_massCon.variables['errbed']
-
-massCon_to_base = interpolate.RectBivariateSpline( trans_y[:], trans_x[:], massCon_errbed[::-1,:], s=0) # regular 2d linear interp. but faster
-                                                                            # y fliped when compaired to Bamber
-for ii in range(0, base_nx):
-    base_data[:,ii] = massCon_to_base.ev(base_y_grid[:,ii], base_x_grid[:,ii] )
-
-base_var = nc_base.createVariable( 'topgerr', 'f4', ('y','x',) )
-base_var[:,:] = base_data[:,:]
-#copy_atts(massCon_errbed, base_var)
-#NOTE: this data is formated short, while the rest of the data is a float. Does not like _FillValue from short data. 
-atts = massCon_var.ncattrs()
-for ii in range(len(atts)):
-    if (atts[ii] != '_FillValue'):
-        base_var.setncattr(atts[ii], massCon_var.getncattr(atts[ii]))
-   # else:
-   #     base_var.setncattr('_FillValue', -9999.)
+        else:
+            base_var.setncattr('missing_value', base_data[-1,-1]) # from a known bad point
 
 # drop temp. variables
-trans_data = None
-trans_y_grid = None
-trans_x_grid = None
-trans_y = None
-trans_x = None
+temp_y_grid = None
+temp_x_grid = None
+temp_data   = None
 nc_massCon.close()
-
-
 #==== Zurich mask ====
 # apply mask, and get 
 # new surface variable
