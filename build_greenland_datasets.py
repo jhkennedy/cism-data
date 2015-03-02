@@ -11,8 +11,8 @@ import numpy as np
 from netCDF4 import Dataset
 from scipy import interpolate
 
-from ncfunc import copy_atts
-import speak
+from util.ncfunc import copy_atts
+from util import speak
 
 """
 Build a CISM dataset
@@ -48,8 +48,9 @@ speak.notquiet(args,"\nBuilding the Greenland datasets in the Bamber projection.
 speak.notquiet(args,  "=========================================================\n")
 
 # create base data file
-nc_base = Dataset('greenland_1km.mcb.nc','w')
-speak.verbose(args,"Building the base dataset: greenland_1km.mcb.nc\n")
+f_base = 'templates/greenland_1km.mcb.nc'
+nc_base = Dataset(f_base,'w')
+speak.verbose(args,"Building the base dataset: "+f_base+"\n")
 
 # load in datasets
 speak.notquiet(args,"Loading the datasets.\n")
@@ -313,7 +314,7 @@ nc_base.close()
 #=====================
 speak.notquiet(args,"\nGetting the Zurich Mask.")
 
-nc_base = Dataset('greenland_1km.mcb.nc','r+')
+nc_base = Dataset(f_base,'r+')
 base_thk  = nc_base.variables['thk']
 thk_data = base_thk[:,:]
 
@@ -343,7 +344,7 @@ speak.notquiet(args,"\nAdding the time dimension and creating the 1km dataset.")
 y_shrink = [100,2900+1] #NOTE: python stop exclusive, nco stop inclusive!
 x_shrink = [500,2000+1] #NOTE: python stop exclusive, nco stop inclusive!
 
-nc_base = Dataset('greenland_1km.mcb.nc','r')
+nc_base = Dataset(f_base,'r')
 base_y = nc_base.variables['y']
 base_ny = base_y[ y_shrink[0]:y_shrink[1] ].shape[0]
 base_x = nc_base.variables['x']
@@ -384,7 +385,7 @@ config_dict= {'REPLACE_EWN':str(base_nx),
               'REPLACE_OUT':'greenland_1km_'+stamp+'.mcb.out.nc', 
               'REPLACE_KM':'1 km' }
 
-base_config = open('greenland_base.mcb.config','r')
+base_config = open('templates/greenland_base.mcb.config','r')
 out_config  = open('complete/greenland_1km.mcb.config','w')
 for line in base_config :
     for src, target in config_dict.iteritems() :
@@ -454,7 +455,7 @@ for ii in range(0, len(coarse_list)):
                   'REPLACE_OUT':'greenland_'+coarse_list[ii]+'_'+stamp+'.mcb.out.nc', 
                   'REPLACE_KM':str(skip)+' km' }
     
-    base_config = open('greenland_base.mcb.config','r')
+    base_config = open('templates/greenland_base.mcb.config','r')
     
     f_config = 'complete/greenland_'+coarse_list[ii]+'.mcb.config'
     out_config  = open(f_config,'w')
