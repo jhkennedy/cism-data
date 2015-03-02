@@ -53,7 +53,7 @@ nc_base = Dataset(f_base,'w')
 speak.verbose(args,"Building the base dataset: "+f_base+"\n")
 
 # load in datasets
-speak.notquiet(args,"Loading the datasets.\n")
+speak.notquiet(args,"Loading the datasets.")
 
 nc_bamber   = Dataset( lc_bamber, 'r') 
 speak.verbose(args,"   Found Bamber DEM")
@@ -77,28 +77,6 @@ nc_mask     = Dataset( lc_mask, 'r'  )
 speak.verbose(args,"   Found Zurich mask")
 
 speak.verbose(args,"\n   All data files found!")
-
-#==== Projections ====
-# All the projections 
-# needed for the data 
-#=====================
-speak.notquiet(args,"\nBuilding the projections.")
-    
-proj_epsg3413 = pyproj.Proj('+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +units=m')
-    # InSAR data in this projections
-
-# EIGEN-GL04C referenced data:
-#----------------------------
-# unfortunately, bed, surface, and thickness data is referenced to EIGEN-GL04C which doesn't exist in proj4. However, EGM2008 should be within ~1m everywhere
-# (and within 10-20 cm in most places) so we use the egm08 projection which is available in proj4
-path_bamber = os.path.dirname(lc_bamber)
-if not ( os.path.exists(path_bamber+'/egm08_25.gtx') ):
-    raise Exception("No "+path_bamber+"/egm08_25.gtx ! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
-#NOTE: Bamber projection appears to not actually have any fasle northings or eastings. 
-#proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
-proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
-
-speak.notquiet(args,"   Done!")
 #===== Bamber DEM =====
 # this is a 1km dataset
 #======================
@@ -132,7 +110,33 @@ copy_atts(bamber_x, base_x) #FIXME: units say km, but it's actuall in m
 base_y_grid, base_x_grid = scipy.meshgrid(base_y[:], base_x[:], indexing='ij') 
 
 speak.notquiet(args,"   Done!")
+#==== Projections ====
+# All the projections 
+# needed for the data 
+#=====================
+speak.notquiet(args,"\nBuilding the projections.")
+    
+proj_epsg3413 = pyproj.Proj('+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +units=m')
+    # InSAR data in this projections
 
+# EIGEN-GL04C referenced data:
+#----------------------------
+# unfortunately, bed, surface, and thickness data is referenced to EIGEN-GL04C which doesn't exist in proj4. However, EGM2008 should be within ~1m everywhere
+# (and within 10-20 cm in most places) so we use the egm08 projection which is available in proj4
+path_bamber = os.path.dirname(lc_bamber)
+if not ( os.path.exists(path_bamber+'/egm08_25.gtx') ):
+    raise Exception("No "+path_bamber+"/egm08_25.gtx ! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
+#NOTE: Bamber projection appears to not actually have any fasle northings or eastings. 
+#proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
+proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
+
+# transform meshes. 
+speak.verbose(args,"   Creating the transform meshes: base Bamber grid to EPSG-3413.")
+trans_x_grid, trans_y_grid = pyproj.transform(proj_eigen_gl04c, proj_epsg3413, base_x_grid.flatten(), base_y_grid.flatten())
+trans_y_grid = trans_y_grid.reshape((base_ny,base_nx))
+trans_x_grid = trans_x_grid.reshape((base_ny,base_nx))
+
+speak.notquiet(args,"   Done!")
 #==== SeaRise Data ====
 # this is a 1km dataset
 #======================
@@ -202,13 +206,6 @@ insar_ny = insar_y[:].shape[0]
 
 insar_x = nc_insar.variables['x']
 insar_nx = insar_x[:].shape[0]
-
-# transform meshes. 
-speak.verbose(args,"   Transforming the base Bamber grid to EPSG-3413.")
-trans_x_grid, trans_y_grid = pyproj.transform(proj_eigen_gl04c, proj_epsg3413, base_x_grid.flatten(), base_y_grid.flatten())
-trans_y_grid = trans_y_grid.reshape((base_ny,base_nx))
-trans_x_grid = trans_x_grid.reshape((base_ny,base_nx))
-#NOTE: These are used later. 
 
 insar_data = np.ndarray( (insar_ny, insar_nx) )
 base_data = np.ndarray( (base_ny,base_nx) )
@@ -472,5 +469,5 @@ for ii in range(0, len(coarse_list)):
 
 nc_1km.close()
 
-speak.notquiet(args,"\n Finished building the datasets.")
+speak.notquiet(args,"\nFinished building the datasets.")
 #==== and done! ====
