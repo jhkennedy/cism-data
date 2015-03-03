@@ -14,6 +14,7 @@ from scipy import interpolate
 from util.ncfunc import copy_atts
 from util import speak
 
+
 """
 Build a CISM dataset
 """
@@ -33,6 +34,10 @@ lc_mask     = 'data/Ice2Sea/ice2sea_Greenland_geometry_icesheet_mask_Zurich.nc'
 # load data sets
 #===============
 stamp = datetime.date.today().strftime("%Y_%m_%d")
+
+# a dummy class for the grid structure
+class grid():
+    pass
 
 # parse the command line arguments
 # -h or --help automatically included!
@@ -56,24 +61,30 @@ speak.verbose(args,"Building the base dataset: "+f_base+"\n")
 speak.notquiet(args,"Loading the datasets.")
 
 nc_bamber   = Dataset( lc_bamber, 'r') 
+from data import bamberdem
 speak.verbose(args,"   Found Bamber DEM")
 
 nc_seaRise  = Dataset( lc_seaRise, 'r')
+from data import searise
 speak.verbose(args,"   Found SeaRise data")
 
 nc_racmo2p0 = Dataset( lc_racmo2p0, 'r')
+from data import racmo2p0
 speak.verbose(args,"   Found RACMO 2.0 data")
 
 if not ( os.path.exists(lc_InSAR) ):
     speak.verbose(args,"\n   Building InSAR velocity dataset...\n")
     subprocess.call("python util/convert_velocities.py "+os.path.dirname(lc_InSAR), shell=True)
 nc_insar    = Dataset( lc_InSAR , 'r')
+from data import insar
 speak.verbose(args,"   Found InSAR data")
 
 nc_massCon  = Dataset(lc_massCon,'r')
+from data import icebridge
 speak.verbose(args,"   Found Mass Conserving Bed data")
 
 nc_mask     = Dataset( lc_mask, 'r'  )
+from data import ice2sea
 speak.verbose(args,"   Found Zurich mask")
 
 speak.verbose(args,"\n   All data files found!")
@@ -82,34 +93,11 @@ speak.verbose(args,"\n   All data files found!")
 #======================
 speak.notquiet(args,"\nBuilding the base grid."),
 
-
-bamber_y = nc_bamber.variables['projection_y_coordinate']
-bamber_ny = bamber_y[:].shape[0] # number of y points for 1km grid
-
-bamber_x = nc_bamber.variables['projection_x_coordinate']
-bamber_nx = bamber_x[:].shape[0] # number of x points for 1km grid
-
-# make bamber 1km grid for base
-base_ny = bamber_ny
-base_nx = bamber_nx
-
-# create our base dimensions
-nc_base.createDimension('y',base_ny)
-nc_base.createDimension('x',base_nx)
-
-# create some base variables
-base_y = nc_base.createVariable('y', 'f4', 'y')
-base_y[:] = bamber_y[:]
-copy_atts(bamber_y, base_y) #FIXME: units say km, but it's actuall in m
-
-base_x = nc_base.createVariable('x', 'f4', 'x')
-base_x[:] = bamber_x[:]
-copy_atts(bamber_x, base_x) #FIXME: units say km, but it's actuall in m
-
-# create some grids for interpolation
-base_y_grid, base_x_grid = scipy.meshgrid(base_y[:], base_x[:], indexing='ij') 
+base = grid()
+base = bamberdem.build_base(nc_bamber, nc_base, base)
 
 speak.notquiet(args,"   Done!")
+
 #==== Projections ====
 # All the projections 
 # needed for the data 
@@ -132,177 +120,41 @@ proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 
 
 # transform meshes. 
 speak.verbose(args,"   Creating the transform meshes: base Bamber grid to EPSG-3413.")
-trans_x_grid, trans_y_grid = pyproj.transform(proj_eigen_gl04c, proj_epsg3413, base_x_grid.flatten(), base_y_grid.flatten())
-trans_y_grid = trans_y_grid.reshape((base_ny,base_nx))
-trans_x_grid = trans_x_grid.reshape((base_ny,base_nx))
+
+trans = grid()
+trans.ny = base.ny
+trans.nx = base.nx
+
+trans.x_grid, trans.y_grid = pyproj.transform(proj_eigen_gl04c, proj_epsg3413, base.x_grid.flatten(), base.y_grid.flatten())
+trans.y_grid = trans.y_grid.reshape((base.ny,base.nx))
+trans.x_grid = trans.x_grid.reshape((base.ny,base.nx))
 
 speak.notquiet(args,"   Done!")
 #==== SeaRise Data ====
 # this is a 1km dataset
 #======================
 speak.notquiet(args,"\nGetting bheatflx and presartm from the SeaRise data.")
-
-seaRise_y = nc_seaRise.variables['y']
-seaRise_ny = seaRise_y[:].shape[0]
-
-seaRise_x = nc_seaRise.variables['x']
-seaRise_nx = seaRise_x[:].shape[0]
-
-# to convert to Bamber 1km grid
-seaRise_data = np.ndarray( (bamber_ny, bamber_nx) )
-seaRise_y_equal_bamber = 100
-seaRise_x_equal_bamber = 500
-
-# get basal heat flux
-#--------------------
-seaRise_data[:,:] = 0.
-seaRise_bheatflx = nc_seaRise.variables['bheatflx']
-seaRise_data[ seaRise_y_equal_bamber:seaRise_y_equal_bamber+seaRise_ny , seaRise_x_equal_bamber:seaRise_x_equal_bamber+seaRise_nx ] = -seaRise_bheatflx[0,:,:] # invert sign!
-
-speak.verbose(args,"   Writing bheatflx to base.")
-base_bheatflx = nc_base.createVariable('bheatflx', 'f4', ('y','x',) )
-base_bheatflx[:,:] = seaRise_data[:,:] # base = bamber 1km
-copy_atts(seaRise_bheatflx, base_bheatflx)
-
-# get annual mean air temperature (2m)
-#-------------------------------------
-seaRise_data[:,:] = 0.
-seaRise_presartm = nc_seaRise.variables['presartm']
-seaRise_data[ seaRise_y_equal_bamber:seaRise_y_equal_bamber+seaRise_ny , seaRise_x_equal_bamber:seaRise_x_equal_bamber+seaRise_nx ] = seaRise_presartm[0,:,:]
-
-speak.verbose(args,"   Writing artm to base.")
-base_artm = nc_base.createVariable('artm', 'f4', ('y','x',) )
-base_artm[:,:] = seaRise_data[:,:] # base = bamber 1km
-copy_atts(seaRise_presartm, base_artm)
-
-nc_seaRise.close()
+searise.get_bheatflx_artm(args, nc_seaRise, nc_base, base)
 
 #==== RACMO2.0 Data ====
 # this is a 1km dataset 
 #=======================
 speak.notquiet(args,"\nGetting acab from the RACMO 2.0 data.")
-racmo2p0_data = np.ndarray( (base_ny, base_nx) )
-
-racmo2p0_data[:,:] = 0.
-racmo2p0_smb = nc_racmo2p0.variables['smb']
-racmo2p0_data[:,:] = racmo2p0_smb[:,::-1].transpose() / 910.
-racmo2p0_data = np.ma.masked_invalid(racmo2p0_data) # find invalid data and create a mask
-racmo2p0_data = racmo2p0_data.filled(0.)            # fill invalid data with zeros
-
-speak.verbose(args,"   Writing acab to base.")
-base_acab = nc_base.createVariable( 'acab', 'f4', ('y','x',) )
-base_acab[:,:] = racmo2p0_data[:,:]
-copy_atts(racmo2p0_smb, base_acab) #FIXME: check atribute units -- divided by 910 earlier
-
-nc_racmo2p0.close()
+racmo2p0.get_acab(args, nc_racmo2p0, nc_base, base)
 
 #==== InSAR velocity Data ====
 # this is a 500m dataset in   
 # the ESPG-3413 projection    
 #=============================
 speak.notquiet(args,"\nGetting vy, vx, ey, and ex from the InSAR data.")
-insar_y = nc_insar.variables['y']
-insar_ny = insar_y[:].shape[0]
-
-insar_x = nc_insar.variables['x']
-insar_nx = insar_x[:].shape[0]
-
-insar_data = np.ndarray( (insar_ny, insar_nx) )
-base_data = np.ndarray( (base_ny,base_nx) )
-
-
-for vv in ['vy','vx','ey','ex'] :
-    insar_data[:,:] = 0.
-    base_data[:,:] = 0.
-    
-    insar_var = nc_insar.variables[ vv ]
-    insar_data[:,:] = insar_var[:,:]
-
-    speak.verbose(args,"   Interpolating "+vv+".")
-    insar_to_base = interpolate.RectBivariateSpline( insar_y[:], insar_x[:], insar_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
-
-    for ii in range(0, base_nx):
-        base_data[:,ii] = insar_to_base.ev(trans_y_grid[:,ii], trans_x_grid[:,ii] )
-    
-    data_min = np.amin( insar_data[ insar_data[:,:] != -2.e9] )
-    data_max = np.amax( insar_data[ insar_data[:,:] != -2.e9] )
-
-    data_mask = np.ma.masked_outside(base_data, data_min, data_max)
-    base_data[ data_mask.mask ] = -2.e9
-    
-    speak.verbose(args,"   Writing "+vv+" to base.")
-    base_var = nc_base.createVariable( vv, 'f4', ('y','x',) )
-    base_var[:,:] = base_data[:,:]
-    copy_atts(insar_var, base_var)
-
-nc_insar.close()
+insar.get_velocity(args, nc_insar, nc_base, trans)
 
 #==== Mass Conserving Bed Data ===
 # This is the new (2015) bed data 
 #=================================
 # new vars: 'thk' 'topg' 'topgerr' 'usrf'** make from thk+topg?? 'usrfRMSE'** doesn't actually exist.
 speak.notquiet(args,"\nGetting thk, topg, and topgerr from the mass conserving bed data.")
-massCon_y = nc_massCon.variables['y']
-massCon_ny = massCon_y[:].shape[0]
-
-massCon_x = nc_massCon.variables['x']
-massCon_nx = massCon_x[:].shape[0]
-
-massCon_data = np.ndarray( (massCon_ny,massCon_nx) )
-base_data    = np.ndarray( (base_ny,base_nx) )
-temp_data    = np.ndarray( (base_ny,base_nx) )
-
-var_list       = [ 'thickness', 'bed',  'errbed' ]
-rename_massCon = [ 'thk',       'topg', 'topgerr']
-for vv in range(0, len(var_list) ) :
-    var = var_list[vv]
-    massCon_data[:,:] = 0.
-    base_data[:,:]    = 0.
-    temp_data[:,:]    = 0.
-
-    massCon_var = nc_massCon.variables[var]
-    massCon_data[:,:] = massCon_var[::-1,:] # y fliped when compaired to Bamber
-
-    speak.verbose(args,"   Interpolating "+var_list[vv]+".")
-    massCon_to_base = interpolate.RectBivariateSpline( massCon_y[::-1], massCon_x[:], massCon_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
-
-    for ii in range(0, base_nx):
-        base_data[:,ii] = massCon_to_base.ev(trans_y_grid[:,ii], trans_x_grid[:,ii] )
-    
-    # This is only needed for data that is actually referenced from the EIGEN-GL04C Geoid -- all topographical 'z' data. Not needed if not 'z' data.
-    if (var_list[vv] != 'errbed') :
-        temp_x_grid, temp_y_grid, temp_data = pyproj.transform(proj_eigen_gl04c, proj_epsg3413, trans_x_grid.flatten(), trans_y_grid.flatten(), base_data.flatten())
-        temp_data = temp_data.reshape((base_ny,base_nx))
-        base_data[:,:] = temp_data[:,:]
-    
-    if (var_list[vv] == 'thickness') :
-        bad_val = 0
-    else :
-        bad_val = -9999
-
-    data_min = np.amin( massCon_data[ massCon_data[:,:] != bad_val] )
-    data_max = np.amax( massCon_data[ massCon_data[:,:] != bad_val] )
-
-    data_mask = np.ma.masked_outside(base_data, data_min, data_max)
-    base_data[ data_mask.mask ] = bad_val
-
-    speak.verbose(args,"   Writing "+rename_massCon[vv]+" to base.")
-    base_var = nc_base.createVariable( rename_massCon[vv], 'f4', ('y','x',) )
-    base_var[:,:] = base_data[:,:]
-    #copy_atts(massCon_var, base_var)
-    #NOTE: this data is formated short, while the rest of the data is a float. Does not like _FillValue from short data. 
-    atts = massCon_var.ncattrs()
-    for ii in range(len(atts)):
-        if (atts[ii] != '_FillValue'):
-            base_var.setncattr(atts[ii], massCon_var.getncattr(atts[ii]))
-        else:
-            base_var.setncattr('missing_value', base_data[-1,-1]) # from a known bad point
-
-# drop temp. variables
-temp_y_grid = None
-temp_x_grid = None
-temp_data   = None
-nc_massCon.close()
+icebridge.get_mcb(args, nc_massCon, nc_base, trans, proj_eigen_gl04c, proj_epsg3413)
 
 nc_base.close()
 #==== Zurich mask ====
@@ -342,27 +194,27 @@ y_shrink = [100,2900+1] #NOTE: python stop exclusive, nco stop inclusive!
 x_shrink = [500,2000+1] #NOTE: python stop exclusive, nco stop inclusive!
 
 nc_base = Dataset(f_base,'r')
-base_y = nc_base.variables['y']
-base_ny = base_y[ y_shrink[0]:y_shrink[1] ].shape[0]
-base_x = nc_base.variables['x']
-base_nx = base_x[ x_shrink[0]:x_shrink[1] ].shape[0]
+base.y = nc_base.variables['y']
+base.ny = base.y[ y_shrink[0]:y_shrink[1] ].shape[0]
+base.x = nc_base.variables['x']
+base.nx = base.x[ x_shrink[0]:x_shrink[1] ].shape[0]
 
 f_1km = 'complete/greenland_1km_'+stamp+'.mcb.nc'
 speak.verbose(args,"   Writing "+f_1km)
 nc_1km = Dataset(f_1km, 'w')
 nc_1km.createDimension('time', None )
-nc_1km.createDimension('y1', base_ny)
-nc_1km.createDimension('x1', base_nx)
+nc_1km.createDimension('y1', base.ny)
+nc_1km.createDimension('x1', base.nx)
 
 time = nc_1km.createVariable('time', 'f4', ('time',))
 y1   = nc_1km.createVariable('y1',   'f4', ('y1',)  )
 x1   = nc_1km.createVariable('x1',   'f4', ('x1',)  )
 
-copy_atts(base_y, y1)
-copy_atts(base_x, x1)
+copy_atts(base.y, y1)
+copy_atts(base.x, x1)
 
-y1[:] = base_y[ y_shrink[0]:y_shrink[1] ]
-x1[:] = base_x[ x_shrink[0]:x_shrink[1] ]
+y1[:] = base.y[ y_shrink[0]:y_shrink[1] ]
+x1[:] = base.x[ x_shrink[0]:x_shrink[1] ]
 time[0] = 0.
 
 for var_name, var_data in nc_base.variables.iteritems() : 
@@ -374,8 +226,8 @@ for var_name, var_data in nc_base.variables.iteritems() :
 
 speak.verbose(args,"   Writing the 1km config file.")
 # write 1km config file
-config_dict= {'REPLACE_EWN':str(base_nx), 
-              'REPLACE_NSN':str(base_ny), 
+config_dict= {'REPLACE_EWN':str(base.nx), 
+              'REPLACE_NSN':str(base.ny), 
               'REPLACE_DEW':str(1000), 
               'REPLACE_DNS':str(1000), 
               'REPLACE_NAME':'greenland_1km_'+stamp+'.mcb.nc', 
@@ -469,5 +321,5 @@ for ii in range(0, len(coarse_list)):
 
 nc_1km.close()
 
-speak.notquiet(args,"\nFinished building the datasets.")
 #==== and done! ====
+speak.notquiet(args,"\nFinished building the datasets.")
