@@ -64,9 +64,4 @@ def get_mcb(args, nc_massCon, nc_base, trans, proj_eigen_gl04c, proj_epsg3413):
             else:
                 base_var.setncattr('missing_value', base_data[-1,-1]) # from a known bad point
 
-    # drop temp. variables
-    temp_y_grid = None
-    temp_x_grid = None
-    temp_data   = None
-    nc_massCon.close()
 

@@ -39,4 +39,3 @@ def get_bheatflx_artm(args, nc_seaRise, nc_base, base) :
     base_artm[:,:] = seaRise_data[:,:] 
     copy_atts(seaRise_presartm, base_artm)
 
-    nc_seaRise.close()

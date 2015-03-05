@@ -19,6 +19,3 @@ def get_acab(args, nc_racmo2p0, nc_base, base):
     base_acab[:,:] = racmo2p0_data[:,:]
     copy_atts(racmo2p0_smb, base_acab) #FIXME: check atribute units -- divided by 910 earlier
 
-    nc_racmo2p0.close()
-
-

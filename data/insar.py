@@ -41,5 +41,3 @@ def get_velocity(args, nc_insar, nc_base, trans):
         base_var[:,:] = base_data[:,:]
         copy_atts(insar_var, base_var)
 
-    nc_insar.close()
-
