@@ -3,13 +3,9 @@ import datetime
 import subprocess
 import argparse
 
-from netCDF4 import Dataset
-
 from util import speak
 from util import projections
-from util.ncfunc import copy_atts, get_nc_file
-from util.projections import DataGrid
-from templates import config
+from util.ncfunc import get_nc_file
 
 """
 Build a CISM dataset
@@ -43,10 +39,6 @@ args = parser.parse_args()
 
 speak.notquiet(args,"\nBuilding the Greenland datasets in the Bamber projection.")
 speak.notquiet(args,  "=========================================================\n")
-
-# create base data file
-speak.verbose(args,"Building the base dataset: "+f_base+"\n")
-nc_base = Dataset(f_base,'w')
 
 # load in datasets
 speak.notquiet(args,"Loading the datasets.")
@@ -86,10 +78,11 @@ speak.verbose(args,"\n   All data files found!")
 #===== Bamber DEM =====
 # this is a 1km dataset
 #======================
-speak.notquiet(args,"\nBuilding the base grid."),
+speak.verbose(args,"\nBuilding the base dataset: "+f_base)
 
-base = DataGrid()
-base = bamberdem.build_base(nc_bamber, nc_base, base)
+speak.notquiet(args,"\nCreating the base grid."),
+
+nc_base, base = bamberdem.build_base(f_base, nc_bamber)
 
 speak.notquiet(args,"   Done!")
 
@@ -97,7 +90,7 @@ speak.notquiet(args,"   Done!")
 # All the projections 
 # needed for the data 
 #=====================
-speak.notquiet(args,"\nBuilding the projections.")
+speak.notquiet(args,"\nGetting the projections.")
 
 trans, proj_epsg3413, proj_eigen_gl04c = projections.greenland(args, lc_bamber, base)
 

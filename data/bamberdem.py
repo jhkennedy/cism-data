@@ -7,9 +7,11 @@ from util.ncfunc import copy_atts, get_nc_file
 from util.projections import DataGrid
 from templates import config
 
-def build_base (nc_bamber, nc_base, base):
+def build_base (f_base, nc_bamber):
     """Build the Bamber base grid.
     """
+    nc_base = Dataset(f_base,'w')
+
     bamber_y = nc_bamber.variables['projection_y_coordinate']
     bamber_ny = bamber_y[:].shape[0] # number of y points for 1km grid
 
@@ -17,6 +19,7 @@ def build_base (nc_bamber, nc_base, base):
     bamber_nx = bamber_x[:].shape[0] # number of x points for 1km grid
 
     # make bamber 1km grid for base
+    base = DataGrid()
     base.ny = bamber_ny
     base.nx = bamber_nx
 
@@ -36,7 +39,7 @@ def build_base (nc_bamber, nc_base, base):
     # create some grids for interpolation
     base.make_grid()
 
-    return base
+    return (nc_base, base)
 
 def add_time (args, f_base, f_1km, f_template):
     """Add the time dimention to a Bamber 1km DEM dataset and write config files. 
