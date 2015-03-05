@@ -3,6 +3,7 @@
 
 # ignore all data
 data/*
+!data/*.py
 complete/*
 
 #### joe made this: https://goel.io/joe

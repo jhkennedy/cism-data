@@ -1,8 +1,20 @@
-from netCDF4 import Dataset
+import os
 import numpy as np
+from netCDF4 import Dataset
+
 """
 A set of useful functions when dealing with netcdf4 data.
 """
+
+def get_nc_file(fname, rw):
+    """Get a netcdf file.
+    """
+    if os.path.exists(fname):
+        nc_file = Dataset( fname, rw) 
+    else:
+        raise Exception("Can't find:  "+fname)
+    return nc_file
+
 
 def copy_atts(fin, fout) :
     """Copy netCDF attributes.
