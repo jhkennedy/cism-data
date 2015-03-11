@@ -145,7 +145,7 @@ for ii in range(0, bamber.ny):
         # get secondary data!
         if not missing_points :
             pass
-            
+
         elif not sec_data.mask[ii,jj] :
             tx, ty, td = pyproj.transform(proj_eigen_gl04c, proj_epsg3413, bamber.x_grid[ii,jj], bamber.y_grid[ii,jj], sec_data[ii,jj])
             if len(missing_points) <= 3 :
@@ -153,11 +153,11 @@ for ii in range(0, bamber.ny):
                     # use secondary data at (ii,jj) for missing points, but keep same interp weight!
                     interp_dict[point] = td
                 reason[ii,jj] = -2
-                continue
+            
             else:
                 new_data[ii,jj] = td
                 reason[ii,jj] = -1
-                continue
+
         else:
             new_data.mask[ii,jj] = True
             reason[ii,jj] = 3
@@ -175,7 +175,7 @@ for ii in range(0, bamber.ny):
                          +interp_dict[ (nn_ii+y_s,nn_jj    ) ]*w[3]
 
 import matplotlib.pyplot as plt
-plt.imshow(new_data.mask)
+plt.imshow(reason)
 plt.show()
 
 print('Writing data')
