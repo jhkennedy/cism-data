@@ -12,6 +12,17 @@ class DataGrid():
         """A way to make a basic grid from x,y data.
         """
         self.y_grid, self.x_grid = scipy.meshgrid(self.y[:], self.x[:], indexing='ij')
+        self.dims = (self.ny, self.nx)
+        self.dy = self.y[1]-self.y[0]
+        self.dx = self.x[1]-self.x[0]
+
+    def make_grid_flip_y(self):
+        """A way to make a basic grid from x,y data, inverting y.
+        """
+        self.y_grid, self.x_grid = scipy.meshgrid(self.y[::-1], self.x[:], indexing='ij')
+        self.dims = (self.ny, self.nx)
+        self.dy = self.y[0]-self.y[1]
+        self.dx = self.x[1]-self.x[0]
 
 
 def greenland(args, lc_bamber, base):
