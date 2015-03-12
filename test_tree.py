@@ -61,7 +61,6 @@ copy_atts(bamber.x, test.x) #FIXME: units say km, but it's actuall in m
 
 print('Building trees')
 # ckd trees of data grids
-bamber.tree = cKDTree(bamber.yx)
 massCon.tree = cKDTree(massCon.yx)
 
 print('Transformations')
@@ -152,11 +151,12 @@ for ii in range(0, bamber.ny):
                 for point in missing_points:
                     # use secondary data at (ii,jj) for missing points, but keep same interp weight!
                     interp_dict[point] = td
-                reason[ii,jj] = -2
+                reason[ii,jj] = -3
             
             else:
                 new_data[ii,jj] = td
-                reason[ii,jj] = -1
+                reason[ii,jj] = -2
+                continue
 
         else:
             new_data.mask[ii,jj] = True
@@ -175,7 +175,7 @@ for ii in range(0, bamber.ny):
                          +interp_dict[ (nn_ii+y_s,nn_jj    ) ]*w[3]
 
 import matplotlib.pyplot as plt
-plt.imshow(reason)
+plt.imshow(reason[::-1,:])
 plt.show()
 
 print('Writing data')

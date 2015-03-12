@@ -51,6 +51,7 @@ def greenland(args, lc_bamber, base):
     trans = DataGrid()
     trans.ny = base.ny
     trans.nx = base.nx
+    trans.dims = base.dims
 
     trans.x_grid, trans.y_grid = pyproj.transform(proj_eigen_gl04c, proj_epsg3413, base.x_grid.flatten(), base.y_grid.flatten())
     trans.y_grid = trans.y_grid.reshape((base.ny,base.nx))
