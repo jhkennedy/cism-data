@@ -126,8 +126,9 @@ nc_insar.close()
 #=================================
 speak.notquiet(args,"\nGetting thk, topg, and topgerr from the mass conserving bed data.")
 
-icebridge.get_mcb(args, nc_massCon, nc_base, trans, proj_eigen_gl04c, proj_epsg3413)
+icebridge.get_mcb(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl04c, proj_epsg3413)
 
+nc_bamber.close()
 nc_massCon.close()
 #==== Zurich mask ====
 # apply mask, and get 
