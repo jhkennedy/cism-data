@@ -1,6 +1,13 @@
 """
-A set of functions to handle the verbal output.
+uitl.speak : A set of functions to handle the verbal output.
+
+This module provides functions to help create or suppress verbal output. 
+
+Functions list:
+    * notquiet( args, words )
+    * verbose( args, words )
 """
+
 
 def notquiet( args, words ) :
     """Print statment if no quiet option set.

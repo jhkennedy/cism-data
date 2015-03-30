@@ -1,3 +1,44 @@
+"""
+data.icebridge : IceBridge BedMachine Greenland data import module.
+
+This module provides functions to import data from the IceBrige BedMachine 
+Greenland dataset. 
+
+Functions list:
+    * get_mcb(args, nc_massCon, nc_bamber, nc_base, base, trans, 
+              proj_eigen_gl04c, proj_epsg3413)
+
+Notes
+-----
+This dataset contains bed topography beneath the Greenland ice sheet based on 
+mass conservation derived from airborne radar tracks and satellite radar. The 
+data set also includes surface and ice thickness measurements.
+
+More information can be found at:
+
+http://nsidc.org/data/docs/daac/icebridge/idbmg4/index.html
+
+The data uses the ESPG:3413 projection which is different than the Bamber DEM:
+    * Polar stereographic
+    * WGS84 ellipsoid
+    * Standard parallel = 70 degrees
+    * Latitude of projection origin = 90 degrees
+    * Central meridian = -45 degrees
+    * false eastings = 0
+    * flase northings = 0
+    * 150 m postings with
+        + lower-left corner y,x: -3349425,-637925 (m) 
+        + upper-right corner y,x: -657675, 864625 (m)
+
+The dataset is on a 10018 x 17946 grid and the data is formated as a short number.
+
+References
+----------
+M. Morlighem, E. Rignot, J. Mouginot, H. Seroussi and E. Larour, Deeply incised 
+submarine glacial valleys beneath the Greenland Ice Sheet, Nat. Geosci., 7, 
+418-422, 2014, doi:10.1038/ngeo2167, 
+http://www.nature.com/ngeo/journal/vaop/ncurrent/full/ngeo2167.html
+"""
 import pyproj
 import scipy
 import numpy as np
@@ -9,6 +50,38 @@ import util.interpolate as interp
 
 def get_mcb(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl04c, proj_epsg3413):
     """Get the mass conserving bed data.
+
+    This function pulls in the `thickness` variable from the mass conserving
+    bed dataset, interpolates it to the Bamber DEM, and writes it to the base 
+    dataset as `thk`. NetCDF attributes are mostly preserved, but the data is
+    changed from type short to type float. 
+
+    This function then pulls in the `bed` and `errbed` variables from the mass
+    conserving bed dataset, and the `bedrockElevation` and `bedrockError`
+    variables from the Bamber dataset. Prioritizing the mass conserving bed data,
+    the bedrock elevation and error is interpolated to the Bamber DEM and written
+    as `topg` and `topgerr` respectively. Data attributes are taken from the mass
+    conserving bed data, and the data is written as a float. 
+
+    Parameters
+    ----------
+    args :
+        Namespace() object holding parsed command line arguments. 
+    nc_massCon :
+        An opened netCDF Dataset containing the Sea Rise data.
+    nc_bamber :
+        An opened netCDF Dataset containing the Sea Rise data.
+    nc_base :
+        The created netCDF Dataset that will contain the base data.
+    base :
+        A DataGrid() class instance that holds the base data grid information.
+    trans :
+        A DataGrid() class instance that holds the base data grid transformed 
+        to EPSG:3413.
+    proj_eigen_gl04c :
+        A proj class instance that holds the Bamber DEM projection.
+    proj_epsg3413 :
+        A proj class instance that holds the EPSG:3413 projection.
     """
     massCon = DataGrid()
     
@@ -94,13 +167,29 @@ def get_mcb(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl04c,
             i_s = -1
             j_s = -1
 
-            # find quadrent
+            # find quadrent point lies in
             if trans.y_grid[ii,jj] >= massCon.y_grid[nn_ii,nn_jj]:
                 i_s = +1
             if trans.x_grid[ii,jj] >= massCon.x_grid[nn_ii,nn_jj]:
                 j_s = +1
 
             # check for missing priority data!
+            # NOTE: points are ordered as such:
+            #
+            # 0: (ii    , jj    )
+            # 1: (ii    , jj+j_s)
+            # 2: (ii+i_s, jj+j_s)
+            # 3: (ii+i_s, jj    )
+            #
+            # Which, for an upper-right quadrent looks like:
+            #
+            # 3 ---- 2
+            # |      |
+            # |      |
+            # 0 ---- 1
+            #
+            # Numbering in other quadrents is the reflection through the axis or axes 
+            # with negitive skip values (i_s or j_s).
             missing_points, interp_dict = interp.check_missing(pri_data, (nn_ii, nn_jj), i_s, j_s)
             missing_err_pts, err_dict = interp.check_missing(pri_err, (nn_ii, nn_jj), i_s, j_s)
 

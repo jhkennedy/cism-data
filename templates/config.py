@@ -2,6 +2,26 @@ import os
 
 def replace_dict(r_ewn, r_nsn, r_dew, r_dns, r_in, r_out, r_km):
     """Create replacements dictionary.
+
+    This function creates a replacement dictionary for replacing key words in 
+    the config file template.
+
+    Parameters
+    ----------
+    r_ewn :
+       Number of grid points in the y direction.
+    r_nsn :
+       Number of grid points in the x direction.
+    r_dew :
+        Grid separation in the y direction (in meters). 
+    r_dns :
+        Grid separation in the x direction (in meters). 
+    f_in :
+       The input dataset name.
+    f_out :
+        The output dataset name (created by CISM).
+    r_km :
+        Grid resolution in kilometers.
     """
     config_dict= {'REPLACE_EWN' : str(r_ewn), 
                   'REPLACE_NSN' : str(r_nsn), 
@@ -15,6 +35,19 @@ def replace_dict(r_ewn, r_nsn, r_dew, r_dns, r_in, r_out, r_km):
 
 def write(f_in, f_template, base, km):
     """write config file.
+
+    This function creates a config file from the config file template.
+
+    Parameters
+    ----------
+    f_in :
+       The input dataset name.
+    f_template :
+        The name of the config file template file.
+    base :
+        A DataGrid() class holding the base data grid.
+    km :
+        Grid resolution in kilometers.
     """
     
     in_split = os.path.splitext(f_in)

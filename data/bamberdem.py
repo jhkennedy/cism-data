@@ -1,5 +1,37 @@
-import os
+"""
+data.bamber : bamberdem data import module.
 
+This module provides functions to import data from the Bamber dataset
+and build a base dataset in the Bamber DEM. 
+
+Functions list:
+    * build_base (f_base, nc_bamber):
+    * add_time (args, f_base, f_1km, f_template):
+    * coarsen(args, f_base, f_template, coarse_list):
+
+Notes
+-----
+The data uses the same projection:
+    * Polar stereographic
+    * WGS84 ellipsoid
+    * Standard parallel = 71 degrees
+    * Latitude of projection origin = 90 degrees
+    * Central meridian = -39 degrees
+    * false eastings = 0
+    * flase northings = 0
+    * 1 km postings with
+        + lower-left corner y,x: -3400000.0,-800000.0 (m) 
+        + upper-right corner y,x:  600000.0, 700000.0 (m)
+
+The data is on a 3001 x 2501 grid.
+
+References
+----------
+Bamber, J.L. et al., A new bed elevation dataset for Greenland, The Cryosphere, 
+7, 499-510, doi:10.5194/tc-7-499-2013, 2013.
+"""
+
+import os
 from netCDF4 import Dataset
 
 from util import speak
@@ -9,6 +41,19 @@ from templates import config
 
 def build_base (f_base, nc_bamber):
     """Build the Bamber base grid.
+
+    This function opens the Bamber DEM dataset, pulls in the 
+    `projection_y_coordinate` and `projection_x_coordinate` variables, creates 
+    a new base dataset, creates a DataGrid() class instance to hold the base 
+    grid, and sets up the base coordinate dimension and variables `y` and `x` 
+    in the new base dataset. NetCDF attributes are preserved.
+
+    Parameters
+    ----------
+    f_base :
+        Filename for the created netCDF Dataset that will contain the base data.
+    nc_bamber :
+        An opened netCDF Dataset containing the Bamber dataset.
     """
     nc_base = Dataset(f_base,'w')
 
@@ -42,7 +87,22 @@ def build_base (f_base, nc_bamber):
     return (nc_base, base)
 
 def add_time (args, f_base, f_1km, f_template):
-    """Add the time dimention to a Bamber 1km DEM dataset and write config files. 
+    """Add the time dimension to a Bamber 1km DEM dataset and write config files. 
+
+    This function opens the base dataset, creates a new 1km dataset with the time
+    dimension that has been shrunken to just around the ice sheet, and creates a 
+    CISM config file. NetCDF attributes are preserved.
+
+    Parameters
+    ----------
+    args :
+        Namespace() object holding parsed command line arguments. 
+    f_base :
+        Filename for the created netCDF Dataset that contains the base data.
+    f_1km :
+        Filename for the created netCDF Dataset that will contain the 1 km dataset.
+    f_template :
+        Filename for the template used to create the CISM config file.
     """
     # shrink dataset to the ice sheet
     nc_base = Dataset(f_base,'r')
@@ -91,6 +151,20 @@ def add_time (args, f_base, f_1km, f_template):
 
 def coarsen(args, f_base, f_template, coarse_list):
     """Coarsen an base dataset.
+
+    This function opens the 1 km dataset and creates coarser resolution datasets.
+    All NetCDF data attributes are preserved.
+
+    Parameters
+    ----------
+    args :
+        Namespace() object holding parsed command line arguments. 
+    f_base :
+        Filename for the base dataset to coarsen.
+    f_template :
+        Filename for the template used to create the CISM config files.
+    coarse_list :
+        List of resolutions to coarsen to. 
     """
     nc_base = Dataset(f_base,'r' )
     

@@ -1,7 +1,53 @@
+"""
+data.ice2sea : Ice2Sea data import module.
+
+This module provides functions to apply the Ice2Sea Greenland ice
+mask, known as the Zurich mask, to a CISM dataset. 
+
+Functions list:
+    * apply_mask(args, nc_mask, nc_base)
+
+Notes
+-----
+This data is associated with deliverable 3.2.8 of the Ice2Sea project.
+
+The data uses the same projection as the Bamber DEM:
+    * Polar stereographic
+    * WGS84 ellipsoid
+    * Standard parallel = 71 degrees
+    * Latitude of projection origin = 90 degrees
+    * Central meridian = -39 degrees
+    * false eastings = 0
+    * flase northings = 0
+    * 1 km postings with
+        + lower-left corner y,x: -3400000.0,-800000.0 (m) 
+        + upper-right corner y,x:  600000.0, 700000.0 (m)
+
+The data is on the 3001 x 2501 Bamber DEM grid.
+
+References
+----------
+Rastner, P., Bolch, T., and Paul, F. (2011): 2011 ... final steps towards the 
+first complete glacier inventory for Greenland, Geophys. Res. Abstr., 13, 
+EGU2011-13192
+"""
+
 from util import speak
 
 def apply_mask(args, nc_mask, nc_base ):
     """Apply Zurich mask to thk and make usrf.
+
+    This function pulls in the Zurich mask, applies it to the variable `thk`  
+     and then creates the variable `usrf.`
+
+    Parameters
+    ----------
+    args :
+        Namespace() object holding parsed command line arguments. 
+    nc_mask :
+        An opened netCDF Dataset containing the Zurich mask.
+    nc_base :
+        The created netCDF Dataset that contains the base data.
     """
     base_thk  = nc_base.variables['thk']
     thk_data = base_thk[:,:]

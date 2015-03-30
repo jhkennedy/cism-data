@@ -1,8 +1,21 @@
+"""
+uitl.projections : Utilities to ease pojection transformations.
+
+This module provides classes and functions to help transform projections. 
+
+Class list:
+    * DataGrid()
+
+Functions list:
+    * greenland(args, lc_bamber, base)
+"""
+
 import os
 import scipy
 import pyproj
 
 from util import speak
+
 
 class DataGrid():
     """A class to hold data grids.
@@ -27,6 +40,29 @@ class DataGrid():
 
 def greenland(args, lc_bamber, base):
     """The projections and tranformation grids for Greenland.
+
+    This function creates the proj projections and a transformed DataGrid() for
+    Greenland.
+
+    Parameters
+    ----------
+    args :
+        Namespace() object holding parsed command line arguments.
+    lc_bamber :
+        Location of the Bamber dataset.
+    base :
+        A DataGrid() class instance that holds the base data grid information.
+
+    Returns
+    -------
+    trans :
+        A DataGrid() class instance that holds the base data grid transformed 
+        to EPSG:3413.
+    proj_eigen_gl04c :
+        A proj class instance that holds the Bamber DEM projection.
+    proj_epsg3413 :
+        A proj class instance that holds the EPSG:3413 projection.
+ 
     """
     proj_epsg3413 = pyproj.Proj('+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +units=m')
         # InSAR data in this projections
