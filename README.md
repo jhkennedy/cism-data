@@ -27,10 +27,11 @@ Once the data location paths are correct, you can build the datasets by running:
 $ python build_greenland_datasets.py
 ```
 
-It will create a template netCDF4 file called `templates/greenland_1km.mcb.nc` 
-that has no time dimension. From this file, a set of time-stamped `.mcb.nc` and 
-`.mcb.config` files in the `complete/` directory are created with an added time
-dimension for 1, 2, 4, and 8 km spacing over Greenland.
+which will take aproximitely 20 minutes to run. It will create a template netCDF4 
+file called `templates/greenland_1km.mcb.nc` that has no time dimension. From
+this file, a set of time-stamped `.mcb.nc` and `.mcb.config` files in the
+`complete/` directory are created with an added time dimension for 1, 2, 4, and
+8 km spacing over Greenland.
 
 `build_greenland_datasets.py` also has some optional arguments:
 
