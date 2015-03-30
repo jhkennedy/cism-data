@@ -1,12 +1,19 @@
+"""
+uitl.ncfunc : A set of useful functions when dealing with netcdf4 data.
+
+This module provides functions to help deal with netCDF data. 
+
+Functions list:
+    * get_nc_file(fname, rw)
+    * copy_att(fin, fout)
+    * copy_atts_bad_fill(fin, fout, missing_value)
+"""
 import os
 import numpy as np
 from netCDF4 import Dataset
 
-"""
-A set of useful functions when dealing with netcdf4 data.
-"""
 
-def get_nc_file(fname, rw):
+def get_nc_file(fname, rw) :
     """Get a netcdf file.
     """
     if os.path.exists(fname):

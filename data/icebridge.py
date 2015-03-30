@@ -167,13 +167,29 @@ def get_mcb(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl04c,
             i_s = -1
             j_s = -1
 
-            # find quadrent
+            # find quadrent point lies in
             if trans.y_grid[ii,jj] >= massCon.y_grid[nn_ii,nn_jj]:
                 i_s = +1
             if trans.x_grid[ii,jj] >= massCon.x_grid[nn_ii,nn_jj]:
                 j_s = +1
 
             # check for missing priority data!
+            # NOTE: points are ordered as such:
+            #
+            # 0: (ii    , jj    )
+            # 1: (ii    , jj+j_s)
+            # 2: (ii+i_s, jj+j_s)
+            # 3: (ii+i_s, jj    )
+            #
+            # Which, for an upper-right quadrent looks like:
+            #
+            # 3 ---- 2
+            # |      |
+            # |      |
+            # 0 ---- 1
+            #
+            # Numbering in other quadrents is the reflection through the axis or axes 
+            # with negitive skip values (i_s or j_s).
             missing_points, interp_dict = interp.check_missing(pri_data, (nn_ii, nn_jj), i_s, j_s)
             missing_err_pts, err_dict = interp.check_missing(pri_err, (nn_ii, nn_jj), i_s, j_s)
 
