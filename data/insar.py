@@ -52,6 +52,17 @@ Variability from Ice-Sheet-Wide Velocity Mapping. Journal of Glaciology
 
 Moon, T., Joughin, I., Smith, B. & Howat, I. 21st-Century Evolution of Greenland 
 Outlet Glacier Velocities. Science 336, 576-578 (2012).
+
+2012 Set
+--------
+As described above.
+
+2015 Set
+--------
+The 2015 dataset contains an updated InSAR velocity map from I. Joughin (sent 
+April, 2015). This is PRELIMINARY and UNPUBLISHED data. It attempts to fill some
+holes and correct/reduce errors in the interior. 
+
 """
 
 import numpy as np
