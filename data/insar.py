@@ -51,7 +51,7 @@ Variability from Ice-Sheet-Wide Velocity Mapping. Journal of Glaciology
 56(197): 415-430. 
 
 Moon, T., Joughin, I., Smith, B. & Howat, I. 21st-Century Evolution of Greenland 
-Outlet Glacier Velocities. Science 336, 576–578 (2012).
+Outlet Glacier Velocities. Science 336, 576-578 (2012).
 """
 
 import numpy as np
