@@ -1,6 +1,6 @@
 import os
 
-def replace_dict(r_ewn, r_nsn, r_dew, r_dns, r_in, r_out, r_km):
+def replace_dict(r_nsn, r_ewn, r_dew, r_dns, r_in, r_out, r_km):
     """Create replacements dictionary.
 
     This function creates a replacement dictionary for replacing key words in 
