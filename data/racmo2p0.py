@@ -24,7 +24,7 @@ included with the NetCDF file, but it appears to use the same grid
         + upper-right corner y,x:  600000.0, 700000.0 (m)
 
 The data is on a 2501 x 3001 grid which, if transposed, is the same as the 
-Baber grid. These *should* be the same.
+Bamber grid. These *should* be the same.
 """
 
 import numpy as np
