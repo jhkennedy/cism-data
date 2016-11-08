@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import datetime
 import subprocess
 import argparse
@@ -12,9 +13,18 @@ from util.ncfunc import get_nc_file
 """
 Build a CISM dataset
 """
+
+def abs_existing_file(file):
+    file = os.path.abspath(file)
+    if not os.path.isfile(file):
+        print("Error! File does not exist: \n    "+file)
+        sys.exit(1)
+    return file
+
 #==== Data Locations ====
 # Link data here or edit 
 #========================
+lc_epsg     = 'EPSG3413grid.json'
 lc_bamber   = 'data/BamberDEM/Greenland_bedrock_topography_V3.nc'
 lc_seaRise  = 'data/SeaRise/Greenland1km.nc'
 lc_racmo2p0 = 'data/RACMO2.0/Racmo2MeanSMB_1961-1990.nc'
@@ -29,7 +39,7 @@ lc_mask     = 'data/Ice2Sea/ice2sea_Greenland_geometry_icesheet_mask_Zurich.nc'
 # load data sets
 #===============
 stamp = datetime.date.today().strftime("%Y_%m_%d")
-f_base = 'templates/greenland_1km.mcb.nc'
+f_base = 'templates/greenland_1km.mcb.epsg3413.nc'
 
 # parse the command line arguments
 parser = argparse.ArgumentParser()   # -h or --help automatically included!
@@ -40,11 +50,15 @@ volume.add_argument("-q", "--quiet",   help="Run silently",                  act
 
 args = parser.parse_args()
 
-speak.notquiet(args,"\nBuilding the Greenland datasets in the Bamber projection.")
-speak.notquiet(args,  "=========================================================\n")
+speak.notquiet(args,"\nBuilding the Greenland datasets in the EPSG:3413 projection.")
+speak.notquiet(args,  "============================================================\n")
 
 # load in datasets
 speak.notquiet(args,"Loading the datasets.")
+
+from data import epsg3413
+f_epsg = abs_existing_file(lc_epsg)
+speak.verbose(args,"   Found EPSG:3413 grid specs")
 
 from data import bamberdem
 nc_bamber = get_nc_file(lc_bamber,'r')
@@ -78,14 +92,14 @@ speak.verbose(args,"   Found Zurich mask")
 speak.verbose(args,"\n   All data files found!")
 
 
-#===== Bamber DEM =====
-# this is a 1km dataset
-#======================
+#====== EPSG:3413 ======
+# this is a 1km dataset 
+#=======================
 speak.verbose(args,"\nBuilding the base dataset: "+f_base)
 
 speak.notquiet(args,"\nCreating the base grid."),
 
-nc_base, base = bamberdem.build_base(f_base, nc_bamber)
+nc_base, base = epsg3413.build_base(f_base, f_epsg, 1000.)
 
 speak.notquiet(args,"   Done!")
 
@@ -95,82 +109,20 @@ speak.notquiet(args,"   Done!")
 #=====================
 speak.notquiet(args,"\nGetting the projections.")
 
-trans, proj_epsg3413, proj_eigen_gl04c = projections.greenland(args, lc_bamber, base)
+proj_epsg3413, proj_eigen_gl04c = projections.greenland(args, lc_bamber)
 
 speak.notquiet(args,"   Done!")
 
-#==== SeaRise Data ====
-# this is a 1km dataset
-#======================
-speak.notquiet(args,"\nGetting bheatflx and presartm from the SeaRise data.")
 
-searise.get_bheatflx_artm(args, nc_seaRise, nc_base, base)
-
-nc_seaRise.close()
-#==== RACMO2.0 Data ====
-# this is a 1km dataset 
-#=======================
-speak.notquiet(args,"\nGetting acab from the RACMO 2.0 data.")
-
-racmo2p0.get_acab(args, nc_racmo2p0, nc_base, base)
-
-nc_racmo2p0.close()
-#==== InSAR velocity Data ====
-# this is a 500m dataset in   
-# the ESPG-3413 projection    
-#=============================
-speak.notquiet(args,"\nGetting vy, vx, ey, and ex from the InSAR data.")
-
-insar.get_velocity(args, nc_insar, nc_base, trans)
-
-nc_insar.close()
 #==== Mass Conserving Bed Data ===
 # This is the new (2015) bed data 
 #=================================
 speak.notquiet(args,"\nGetting thk, topg, and topgerr from the mass conserving bed data.")
 
-icebridge.get_mcb(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl04c, proj_epsg3413)
+icebridge.mcb_epsg3413(args, nc_massCon, nc_base, base)
 
 nc_bamber.close()
 nc_massCon.close()
-#==== Zurich mask ====
-# apply mask, and get 
-# new surface variable
-#=====================
-speak.notquiet(args,"\nGetting the Zurich Mask.")
-
-base = None
-nc_base.close()   # need to read in some data from nc_base now
-nc_base = get_nc_file(f_base,'r+')
-
-ice2sea.apply_mask(args, nc_mask, nc_base)
-
-nc_mask.close()
 #==== Done getting data ====
 #===========================
 nc_base.close()
-
-#==== add time dim and shrink ====
-# apply to all the variables and  
-# shrink to size around ice sheet 
-#=================================
-speak.notquiet(args,"\nAdding the time dimension and creating the 1km dataset.")
-
-f_1km      = 'complete/greenland_1km_'+stamp+'.mcb.nc'
-f_template = 'greenland.mcb.config'
-
-bamberdem.add_time(args, f_base, f_1km, f_template)
-
-#==== Coarsen ==== 
-# make 2, 4 and 8  
-# km datasets      
-#==================
-speak.notquiet(args,"\nCreating coarser datasets.")
-
-coarse_list = [2,4,8]   # in km
-
-bamberdem.coarsen(args, f_1km, f_template, coarse_list)
-
-#==== and done! ====
-#===================
-speak.notquiet(args,"\nFinished building the datasets.")

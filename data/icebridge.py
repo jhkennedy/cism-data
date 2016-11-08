@@ -39,8 +39,9 @@ submarine glacial valleys beneath the Greenland Ice Sheet, Nat. Geosci., 7,
 418-422, 2014, doi:10.1038/ngeo2167, 
 http://www.nature.com/ngeo/journal/vaop/ncurrent/full/ngeo2167.html
 """
-import pyproj
+import sys
 import scipy
+import pyproj
 import numpy as np
 
 from util import speak
@@ -48,8 +49,48 @@ from util.ncfunc import copy_atts, copy_atts_bad_fill
 from util.projections import DataGrid
 import util.interpolate as interp
 
-def get_mcb(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl04c, proj_epsg3413):
-    """Get the mass conserving bed data.
+def mcb_epsg3413(args, nc_massCon, nc_base, base):
+    """The mass conserving bed data on CISM's ESPG:3413 grid.
+
+    This function pulls in the `thickness` variable from the mass conserving
+    bed dataset, interpolates it to CISM's EPSG:3413 grid, and writes it to the
+    base dataset as `thk`. NetCDF attributes are mostly preserved, but the data
+    is changed from type short to type float. 
+    """
+    massCon = DataGrid()
+
+    massCon.y = nc_massCon.variables['y']
+    massCon.x = nc_massCon.variables['x']
+    massCon.ny = massCon.y[:].shape[0]
+    massCon.nx = massCon.x[:].shape[0]
+    massCon.make_grid_flip_y()
+
+    massCon.yx = np.ndarray( (len(massCon.y_grid.ravel()),2) )
+    massCon.yx[:,0] = massCon.y_grid.ravel()
+    massCon.yx[:,1] = massCon.x_grid.ravel()
+   
+    massCon.thickness = nc_massCon.variables['thickness']
+    massCon.thk = np.ndarray(massCon.dims)
+    massCon.thk[:,:] = massCon.thickness[::-1,:] # y fliped
+
+    speak.verbose(args,"   Interpolating thickness and writing to base.")
+    massCon_to_base = scipy.interpolate.RectBivariateSpline( massCon.y[::-1], massCon.x[:], massCon.thk, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
+    base.thk = nc_base.createVariable('thk', 'f4', ('y','x',) )
+    base.thk[:] = np.zeros( base.dims )
+    for ii in range(0, base.nx):
+        sys.stdout.write('\r')
+        ctr = (ii*60)/base.nx
+        sys.stdout.write("[%-60s] %d%%" % ('='*ctr, ctr/60.*100.))
+        sys.stdout.flush()
+        base.thk[:,ii] = massCon_to_base.ev(base.y_grid[:,ii], base.x_grid[:,ii] )
+    print('')
+    copy_atts_bad_fill(massCon.thickness, base.thk, -9999.)
+
+
+
+
+def mcb_bamber(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl04c, proj_epsg3413):
+    """The mass conserving bed data in the bamber projection.
 
     This function pulls in the `thickness` variable from the mass conserving
     bed dataset, interpolates it to the Bamber DEM, and writes it to the base 
