@@ -46,10 +46,10 @@ import numpy as np
 
 from util import speak
 from util.ncfunc import copy_atts, copy_atts_bad_fill
-from util.projections import DataGrid
+from util import projections 
 import util.interpolate as interp
 
-def mcb_epsg3413(args, nc_massCon, nc_base, base):
+def mcb_epsg3413(args, nc_massCon, nc_bamber, nc_base, base, proj_epsg3413, proj_eigen_gl04c):
     """The mass conserving bed data on CISM's ESPG:3413 grid.
 
     This function pulls in the `thickness` variable from the mass conserving
@@ -57,36 +57,113 @@ def mcb_epsg3413(args, nc_massCon, nc_base, base):
     base dataset as `thk`. NetCDF attributes are mostly preserved, but the data
     is changed from type short to type float. 
     """
-    massCon = DataGrid()
-
+    massCon = projections.DataGrid()
     massCon.y = nc_massCon.variables['y']
     massCon.x = nc_massCon.variables['x']
     massCon.ny = massCon.y[:].shape[0]
     massCon.nx = massCon.x[:].shape[0]
     massCon.make_grid_flip_y()
 
-    massCon.yx = np.ndarray( (len(massCon.y_grid.ravel()),2) )
-    massCon.yx[:,0] = massCon.y_grid.ravel()
-    massCon.yx[:,1] = massCon.x_grid.ravel()
-   
     massCon.thickness = nc_massCon.variables['thickness']
     massCon.thk = np.ndarray(massCon.dims)
     massCon.thk[:,:] = massCon.thickness[::-1,:] # y fliped
 
+    bamber = projections.DataGrid()
+    bamber.y = nc_bamber.variables['projection_y_coordinate']
+    bamber.x = nc_bamber.variables['projection_x_coordinate']
+    bamber.ny = bamber.y[:].shape[0]
+    bamber.nx = bamber.x[:].shape[0] 
+    bamber.make_grid()
+
     speak.verbose(args,"   Interpolating thickness and writing to base.")
+    sys.stdout.write(  "   [%-60s] %d%%" % ('='*0, 0.))
+    sys.stdout.flush()
     massCon_to_base = scipy.interpolate.RectBivariateSpline( massCon.y[::-1], massCon.x[:], massCon.thk, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
     base.thk = nc_base.createVariable('thk', 'f4', ('y','x',) )
     base.thk[:] = np.zeros( base.dims )
     for ii in range(0, base.nx):
-        sys.stdout.write('\r')
         ctr = (ii*60)/base.nx
-        sys.stdout.write("[%-60s] %d%%" % ('='*ctr, ctr/60.*100.))
+        sys.stdout.write("\r   [%-60s] %d%%" % ('='*ctr, ctr/60.*100.))
         sys.stdout.flush()
         base.thk[:,ii] = massCon_to_base.ev(base.y_grid[:,ii], base.x_grid[:,ii] )
-    print('')
+    sys.stdout.write("\r   [%-60s] %d%%\n" % ('='*60, 100.))
+    sys.stdout.flush()
     copy_atts_bad_fill(massCon.thickness, base.thk, -9999.)
 
 
+    speak.verbose(args,"   Interpolating, with priority, topg and topgerr.")
+    speak.verbose(args,"      Primary Data [IceBridge]:  bed and errbed.")
+    speak.verbose(args,"      Secondary Data [BamberDEM]:  BedrockElevation and BedrockError.")
+
+    base_vars = {'topg':['bed','BedrockElevation'],
+                 'topgerr':['errbed', 'BedrockError']}
+    for var, var_list in base_vars.iteritems():
+        speak.verbose(args,  '\n      Begin '+var+':')
+        pri_data = np.ma.masked_equal( nc_massCon.variables[var_list[0]][::-1,:] , -9999)
+        sec_data = np.ma.masked_values( nc_bamber.variables[var_list[1]][:,:], -9999.)
+
+        # fill in missing data values in the IceBridge data with the Bamber DEM
+        speak.verbose(args,"         Combining IceBridge and Bamber DEMs.")
+        sys.stdout.write(  "         [%-60s] %d%%" % ('='*0, 0.))
+        sys.stdout.flush()
+        massCon2bamber = projections.transform(massCon, proj_epsg3413, proj_eigen_gl04c)
+        sec_interp = scipy.interpolate.RectBivariateSpline( bamber.y[::], bamber.x[:], sec_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
+        massCon_bamber = np.zeros( massCon.dims )
+        for ii in range(0, massCon.nx):
+            ctr = (ii*60)/massCon.nx
+            sys.stdout.write("\r         [%-60s] %d%%" % ('='*ctr, ctr/60.*100.))
+            sys.stdout.flush()
+            massCon_bamber[:,ii] = sec_interp.ev(massCon2bamber.y_grid[:,ii], massCon2bamber.x_grid[:,ii] )
+        sys.stdout.write("\r         [%-60s] %d%%\n" % ('='*60, 100.))
+        sys.stdout.flush()
+        pri_data.unshare_mask()
+        pri_data[pri_data.mask] = massCon_bamber[pri_data.mask]
+
+        # interpolate the Bamber DEM data to the base grid
+        speak.verbose(args,"         Interpolating extended Bamber DEM to base grid.")
+        sys.stdout.write(  "         [%-60s] %d%%" % ('='*0, 0.))
+        sys.stdout.flush()
+        base2bamber = projections.transform(base, proj_epsg3413, proj_eigen_gl04c)
+        base_bamber = np.zeros( base.dims )
+        for ii in range(0, base.nx):
+            ctr = (ii*60)/base.nx
+            sys.stdout.write("\r         [%-60s] %d%%" % ('='*ctr, ctr/60.*100.))
+            sys.stdout.flush()
+            base_bamber[:,ii] = sec_interp.ev(base2bamber.y_grid[:,ii], base2bamber.x_grid[:,ii] )
+        sys.stdout.write("\r         [%-60s] %d%%\n" % ('='*60, 100.))
+        sys.stdout.flush()
+
+        # interpolate the filled IceBridge data to the base grid
+        speak.verbose(args,"         Interpolating combined dataset to base grid.")
+        sys.stdout.write(  "         [%-60s] %d%%" % ('='*0, 0.))
+        sys.stdout.flush()
+        pri_interp = scipy.interpolate.RectBivariateSpline( massCon.y[::-1], massCon.x[:], pri_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
+        base_mcb = np.zeros( base.dims )
+        for ii in range(0, base.nx):
+            ctr = (ii*60)/base.nx
+            sys.stdout.write("\r         [%-60s] %d%%" % ('='*ctr, ctr/60.*100.))
+            sys.stdout.flush()
+            base_mcb[:,ii] = pri_interp.ev(base.y_grid[:,ii], base.x_grid[:,ii] )
+        sys.stdout.write("\r         [%-60s] %d%%\n" % ('='*60, 100.))
+        sys.stdout.flush()
+
+        #NOTE: RectBivariateSpline extrapolates data outside the convex hull
+        #      (constant value), so, we need to create a mask for values outisde
+        #      the IceBridge convex hull...
+        base_y_mask = np.ma.masked_outside(base.y_grid,massCon.y[0], massCon.y[-1])
+        base_x_mask = np.ma.masked_outside(base.x_grid,massCon.x[0], massCon.x[-1])
+        base_mcb_masked = np.ma.masked_array(base_mcb, mask=np.logical_or(base_y_mask.mask,base_x_mask.mask))
+
+        base_bamber[~base_mcb_masked.mask] = base_mcb_masked[~base_mcb_masked.mask]
+
+        if var == 'topg':
+            base.topg = nc_base.createVariable('topg', 'f4', ('y','x',) )
+            base.topg[:] = base_bamber[:]  
+            copy_atts_bad_fill(nc_massCon.variables['bed'], base.topg, -9999.)
+        else:
+            base.topgerr = nc_base.createVariable('topgerr', 'f4', ('y','x',) )
+            base.topgerr[:] = base_bamber[:]  
+            copy_atts_bad_fill(nc_massCon.variables['errbed'], base.topg, -9999.)
 
 
 def mcb_bamber(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl04c, proj_epsg3413):
@@ -124,7 +201,7 @@ def mcb_bamber(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl0
     proj_epsg3413 :
         A proj class instance that holds the EPSG:3413 projection.
     """
-    massCon = DataGrid()
+    massCon = projections.DataGrid()
     
     massCon.y = nc_massCon.variables['y']
     massCon.x = nc_massCon.variables['x']

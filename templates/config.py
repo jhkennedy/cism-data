@@ -57,9 +57,9 @@ def write(f_in, f_template, base, km):
 
     base_config = open('templates/'+f_template,'r')
     
-    t_split = os.path.splitext( os.path.splitext(f_template)[0] )
+    t_split = f_template.split('.') 
 
-    f_config = 'complete/'+t_split[0]+'_'+str(km)+'km'+t_split[1]+'.config'
+    f_config = 'complete/'+t_split[0]+'_'+str(km)+'km.'+'.'.join(t_split[1:])
     #NOTE: should make something like: complete/greenland_1km.mcb.config
 
     out_config  = open(f_config,'w')

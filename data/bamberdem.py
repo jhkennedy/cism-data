@@ -112,9 +112,13 @@ def add_time (args, f_base, f_1km, f_template):
 
     base = DataGrid()
     base.y = nc_base.variables['y']
-    base.ny = base.y[ y_shrink[0]:y_shrink[1] ].shape[0]
     base.x = nc_base.variables['x']
-    base.nx = base.x[ x_shrink[0]:x_shrink[1] ].shape[0]
+    if args.extended:
+        base.ny = base.y.shape[0]
+        base.nx = base.x.shape[0]
+    else:
+        base.ny = base.y[ y_shrink[0]:y_shrink[1] ].shape[0]
+        base.nx = base.x[ x_shrink[0]:x_shrink[1] ].shape[0]
 
     speak.verbose(args,"   Writing "+f_1km)
     nc_1km = Dataset(f_1km, 'w')
@@ -129,14 +133,21 @@ def add_time (args, f_base, f_1km, f_template):
     copy_atts(base.y, y1)
     copy_atts(base.x, x1)
 
-    y1[:] = base.y[ y_shrink[0]:y_shrink[1] ]
-    x1[:] = base.x[ x_shrink[0]:x_shrink[1] ]
+    if args.extended:
+        y1[:] = base.y[:]
+        x1[:] = base.x[:]
+    else:
+        y1[:] = base.y[ y_shrink[0]:y_shrink[1] ]
+        x1[:] = base.x[ x_shrink[0]:x_shrink[1] ]
     time[0] = 0.
 
     for var_name, var_data in nc_base.variables.iteritems() : 
         if (var_name != 'x' and var_name != 'y'):
             var_1km = nc_1km.createVariable(var_name, 'f4', ('time','y1','x1',))
-            var_1km[0,:,:] = var_data[ y_shrink[0]:y_shrink[1] , x_shrink[0]:x_shrink[1] ]
+            if args.extended:
+                var_1km[0,:,:] = var_data[:,:]
+            else:
+                var_1km[0,:,:] = var_data[ y_shrink[0]:y_shrink[1] , x_shrink[0]:x_shrink[1] ]
             copy_atts(var_data, var_1km)
     #copy_atts(var_data, var_1km)
 

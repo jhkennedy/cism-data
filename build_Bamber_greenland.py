@@ -18,7 +18,6 @@ Build a CISM dataset
 lc_bamber   = 'data/BamberDEM/Greenland_bedrock_topography_V3.nc'
 lc_seaRise  = 'data/SeaRise/Greenland1km.nc'
 lc_racmo2p0 = 'data/RACMO2.0/Racmo2MeanSMB_1961-1990.nc'
-#lc_InSAR    = 'data/InSAR/Joughin2012/greenland_vel_mosaic500.nc' #NOTE:  will build this file from mosaicOffsets.* files
 lc_InSAR    = 'data/InSAR/Joughin2015/greenland_vel_mosaic500.nc' #NOTE:  will build this file from mosaicOffsets.* files
 lc_massCon  = 'data/IceBridge/Greenland/MCdataset-2014-11-19.nc'
 lc_mask     = 'data/Ice2Sea/ice2sea_Greenland_geometry_icesheet_mask_Zurich.nc'
@@ -33,6 +32,8 @@ f_base = 'templates/greenland_1km.mcb.nc'
 
 # parse the command line arguments
 parser = argparse.ArgumentParser()   # -h or --help automatically included!
+
+parser.add_argument('-e', '--extended', help='Produce the extended grid.', action='store_true')
 
 volume = parser.add_mutually_exclusive_group()
 volume.add_argument("-v", "--verbose", help="Increase the output verbosity", action="store_true")
@@ -111,7 +112,7 @@ speak.notquiet(args,"   Done!")
 #=======================
 speak.notquiet(args,"\nGetting bheatflx and presartm from the SeaRise data.")
 
-searise.get_bheatflx_artm(args, nc_seaRise, nc_base, base)
+searise.bheatflx_artm_bamber(args, nc_seaRise, nc_base, base)
 
 nc_seaRise.close()
 #==== RACMO2.0 Data =====
@@ -119,7 +120,7 @@ nc_seaRise.close()
 #========================
 speak.notquiet(args,"\nGetting acab from the RACMO 2.0 data.")
 
-racmo2p0.get_acab(args, nc_racmo2p0, nc_base, base)
+racmo2p0.acab_bamber(args, nc_racmo2p0, nc_base, base)
 
 nc_racmo2p0.close()
 #==== InSAR velocity Data ====
@@ -128,7 +129,7 @@ nc_racmo2p0.close()
 #=============================
 speak.notquiet(args,"\nGetting vy, vx, ey, and ex from the InSAR data.")
 
-insar.get_velocity(args, nc_insar, nc_base, trans)
+insar.velocity_bamber(args, nc_insar, nc_base, trans)
 
 nc_insar.close()
 #==== Mass Conserving Bed Data ===
@@ -174,7 +175,7 @@ bamberdem.add_time(args, f_base, f_1km, f_template)
 #==================
 speak.notquiet(args,"\nCreating coarser datasets.")
 
-coarse_list = [2,4,8]   # in km
+coarse_list = [2,4,5,8]   # in km
 
 bamberdem.coarsen(args, f_1km, f_template, coarse_list)
 

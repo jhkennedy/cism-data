@@ -16,7 +16,6 @@ import pyproj
 
 from util import speak
 
-
 class DataGrid():
     """A class to hold data grids.
     """
@@ -36,6 +35,27 @@ class DataGrid():
         self.dims = (self.ny, self.nx)
         self.dy = self.y[0]-self.y[1]
         self.dx = self.x[1]-self.x[0]
+
+
+def grid_center_latlons(nc_base, base, proj):
+    base.long_grid = nc_base.createVariable('lon', 'f4', ('y','x',))
+    base.long_grid.units = 'degrees'
+    base.long_grid.long_name = 'grid center longitude'
+    base.long_grid.standard_name = 'longitude'
+    base.long_grid.note = 'Created by Joseph H. Kennedy using pyproj.'
+
+    base.lat_grid = nc_base.createVariable('lat', 'f4', ('y','x',))
+    base.lat_grid.units = 'degrees'
+    base.lat_grid.lat_name = 'grid center latitude'
+    base.lat_grid.standard_name = 'latitude'
+    base.lat_grid.note = 'Created by Joseph H. Kennedy using pyproj.'
+
+    long_grid, lat_grid = proj(base.x_grid.ravel(), base.y_grid.ravel(), inverse=True)
+    long_grid.shape = base.x_grid.shape 
+    lat_grid.shape = base.x_grid.shape
+
+    base.long_grid[:,:] = long_grid
+    base.lat_grid[:,:]  = lat_grid
 
 
 def transform(base, proj1, proj2):
@@ -90,3 +110,7 @@ def greenland(args, lc_bamber):
     proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
 
     return (proj_epsg3413, proj_eigen_gl04c)
+
+def equal_area(min_lat, max_lat, lon_0):
+    proj_aea = pyproj.Proj('+proj=aea +lat_1='+str(min_lat)+' +lat_2='+str(max_lat)+' +lat_0='+str((max_lat+min_lat)/2.)+' +lon_0='+str(lon_0))
+    return proj_aea

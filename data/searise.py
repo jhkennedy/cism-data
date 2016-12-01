@@ -42,12 +42,56 @@ dynamics and basal topography. Journal of Geophysical Research 106 (D24):
 33781-33788.
 """
 
+import sys
+import scipy
+import pyproj
 import numpy as np
 
-from util.ncfunc import copy_atts
+from util.ncfunc import copy_atts, copy_atts_add_fill
 from util import speak
+from util import projections 
 
-def get_bheatflx_artm(args, nc_seaRise, nc_base, base) :
+def bheatflx_artm_epsg3413(args, nc_seaRise, nc_base, base, proj_epsg3413, proj_eigen_gl04c):
+    seaRise = projections.DataGrid()
+    seaRise.y = nc_seaRise.variables['y']
+    seaRise.x = nc_seaRise.variables['x']
+    seaRise.ny = seaRise.y[:].shape[0]
+    seaRise.nx = seaRise.x[:].shape[0]
+    seaRise.make_grid()
+
+    base_vars = {'bheatflx':'bheatflx', 'artm':'presartm'}
+    for base_var, sea_var in base_vars.iteritems():
+        speak.verbose(args,'   Interpolating '+sea_var+' to '+base_var+' in base grid.')
+        sys.stdout.write("   [%-60s] %d%%" % ('='*0, 0.))
+        sys.stdout.flush()
+        sea_data = nc_seaRise.variables[sea_var][0,:,:]
+
+        base2bamber = projections.transform(base, proj_epsg3413, proj_eigen_gl04c)
+        seaRise_interp = scipy.interpolate.RectBivariateSpline( seaRise.y[:], seaRise.x[:], sea_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
+        base_bamber = np.zeros( base.dims )
+        for ii in range(0, base.nx):
+            ctr = (ii*60)/base.nx
+            sys.stdout.write("\r   [%-60s] %d%%" % ('='*ctr, ctr/60.*100.))
+            sys.stdout.flush()
+            base_bamber[:,ii] = seaRise_interp.ev(base2bamber.y_grid[:,ii], base2bamber.x_grid[:,ii] )
+        sys.stdout.write("\r   [%-60s] %d%%\n" % ('='*60, 100.))
+        sys.stdout.flush()
+
+        #NOTE: RectBivariateSpline extrapolates data outside the convex hull
+        #      (constant value), so, we need to create a mask for values outisde
+        #      the IceBridge convex hull...
+        base_y_mask = np.ma.masked_outside(base2bamber.y_grid, seaRise.y[0], seaRise.y[-1])
+        base_x_mask = np.ma.masked_outside(base2bamber.x_grid, seaRise.x[0], seaRise.x[-1])
+        base_masked = np.ma.masked_array(base_bamber, mask=np.logical_or(base_y_mask.mask,base_x_mask.mask))
+
+        base_bamber[base_masked.mask] = -9999.
+
+        base.var = nc_base.createVariable(base_var, 'f4', ('y','x',) )
+        base.var[:] = base_bamber[:]  
+        copy_atts_add_fill(nc_seaRise.variables[sea_var], base.var, -9999.)
+        
+     
+def bheatflx_artm_bamber(args, nc_seaRise, nc_base, base) :
     """Get bheatflx and artm from the sea rise data.
 
     This function pulls in the `bheatflx` and `presartm` variables from the

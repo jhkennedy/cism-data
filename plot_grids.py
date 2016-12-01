@@ -13,6 +13,8 @@ from util.ncfunc import get_nc_file
 
 
 lc_bamber   = 'data/BamberDEM/Greenland_bedrock_topography_V3.nc'
+#lc_base   = 'complete/greenland_1km_2016_11_23.mcb.nc'
+lc_base   = 'complete/greenland_1km_2016_03_17.mcb.nc'
 
 
 #==================================
@@ -27,7 +29,7 @@ volume.add_argument("-q", "--quiet",   help="Run silently",                  act
 args = parser.parse_args()
 
 speak.notquiet(args,"\nPlotting the representation of the Bamber grid in the EPSG:3413 projection")
-speak.notquiet(args,  "=========================================================================\n")
+speak.notquiet(args,  "==========================================================================\n")
 
 
 #==================
@@ -35,7 +37,7 @@ speak.notquiet(args,  "=========================================================
 #==================
 speak.notquiet(args,"Loading the datasets.")
 
-nc_base = get_nc_file(lc_bamber,'r')
+nc_base = get_nc_file(lc_base,'r')
 speak.verbose(args,"   Found Bamber DEM")
 
 speak.verbose(args,"\n   All data files found!")
@@ -47,8 +49,8 @@ speak.verbose(args,"\n   All data files found!")
 
 speak.notquiet(args,"\nCreating the 1 km Bamber grid."),
 base = projections.DataGrid()
-base.y = nc_base.variables['projection_y_coordinate']
-base.x = nc_base.variables['projection_x_coordinate']
+base.y = nc_base.variables['y1']
+base.x = nc_base.variables['x1']
 base.ny = base.y[:].shape[0]
 base.nx = base.x[:].shape[0] 
 base.make_grid()
@@ -92,16 +94,24 @@ speak.verbose(args,"\n      Upper Left  (x,y): ("+str(B2E_xs[3])+", "+str(B2E_ys
 
 speak.notquiet(args, "\nDeterniming the new EPSG:3413 grid from the transformed Bamber grid.")
 
-e_ll = (np.floor(np.mean([B2E_xs[0], B2E_xs[3]])/1000.)*1000., 
-        np.floor(np.mean([B2E_ys[0], B2E_ys[1]])/1000.)*1000.)
+e_ll = [np.floor(np.mean([B2E_xs[0], B2E_xs[3]])/1000.)*1000., 
+        np.floor(np.mean([B2E_ys[0], B2E_ys[1]])/1000.)*1000.]
 
-e_ur = ( np.ceil(np.mean([B2E_xs[1], B2E_xs[2]])/1000.)*1000., 
-         np.ceil(np.mean([B2E_ys[3], B2E_ys[2]])/1000.)*1000.)
+e_ur = [ np.ceil(np.mean([B2E_xs[1], B2E_xs[2]])/1000.)*1000., 
+         np.ceil(np.mean([B2E_ys[3], B2E_ys[2]])/1000.)*1000.]
+
 
 E_xs = np.array([e_ll[0], e_ur[0], e_ur[0], e_ll[0], e_ll[0]])
 E_ys = np.array([e_ll[1], e_ll[1], e_ur[1], e_ur[1], e_ll[1]])
 
 E_lons, E_lats = proj_epsg3413(E_xs, E_ys, inverse=True)
+
+offset = -80000.0
+
+O_xs = np.array([e_ll[0]+offset, e_ur[0], e_ur[0], e_ll[0]+offset, e_ll[0]+offset])
+O_ys = np.array([e_ll[1], e_ll[1], e_ur[1], e_ur[1], e_ll[1]])
+
+O_lons, O_lats = proj_epsg3413(O_xs, O_ys, inverse=True)
 
 speak.notquiet(args,  "    New EPSG:3413 grid:")
 speak.notquiet(args,  "      Lower Left  (x,y): ("+str(E_xs[0])+", "+str(E_ys[0])+")")
@@ -113,17 +123,17 @@ speak.notquiet(args,"\n      Upper Left  (x,y): ("+str(E_xs[3])+", "+str(E_ys[3]
 #=====================================
 # Write the grid specs to a json file 
 #=====================================
-E_grid = {'ll':[E_xs[0], E_ys[0]],
-          'ur':[E_xs[2], E_ys[2]],
-          'xs':E_xs.tolist(),
-          'ys':E_ys.tolist(),
-          'lons': E_lons.tolist(),
-          'lats': E_lats.tolist(),
+O_grid = {'ll':[O_xs[0], O_ys[0]],
+          'ur':[O_xs[2], O_ys[2]],
+          'xs':O_xs.tolist(),
+          'ys':O_ys.tolist(),
+          'lons': O_lons.tolist(),
+          'lats': O_lats.tolist(),
           'projstring':'+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +units=m'
          }
 
-with open('EPSG3413grid.json', 'w') as f:
-    json.dump(E_grid, f)
+with open('EPSG3413grid_shrunk.json', 'w') as f:
+    json.dump(O_grid, f)
 
 
 #======
@@ -160,6 +170,9 @@ glmap.plot(B_X, B_Y, 'bo-', label='Bamber grid')
 E2B_X, E2B_Y = glmap(E_lons, E_lats)
 glmap.plot(E2B_X, E2B_Y, 'mo-', label='EPSG:3413 grid')
 
+O2B_X, O2B_Y = glmap(O_lons, O_lats)
+glmap.plot(O2B_X, O2B_Y, 'go-', label='Offset EPSG:3413 grid')
+
 plt.title('Greenland using the Bamber projection')
 plt.legend(loc='lower center', ncol=2, fancybox=True, shadow=True)
 
@@ -187,6 +200,9 @@ glmap.plot(B2E_X, B2E_Y, 'bo-', label='Bamber grid')
 E_X, E_Y = glmap(E_lons, E_lats)
 glmap.plot(E_X, E_Y, 'mo-', label='EPSG:3413 grid')
 
+O_X, O_Y = glmap(O_lons, O_lats)
+glmap.plot(O_X, O_Y, 'go-', label='Offset EPSG:3413 grid')
+
 plt.title('Greenland using the EPSG:3413 projection')
 plt.legend(loc='lower center', ncol=2, fancybox=True, shadow=True)
 
@@ -197,6 +213,7 @@ plt.legend(loc='lower center', ncol=2, fancybox=True, shadow=True)
 plt.tight_layout()
 plt.show()
 
+nc_base.close()
 speak.notquiet(args,"   Done!\n")
 
 

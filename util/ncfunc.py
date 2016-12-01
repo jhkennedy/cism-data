@@ -87,3 +87,38 @@ def copy_atts_bad_fill(fin, fout, missing_value) :
             fout.setncattr(atts[ii], fin.getncattr(atts[ii]))
         else:
             fout.setncattr('missing_value', missing_value)
+
+
+def copy_atts_add_fill(fin, fout, missing_value) :
+    """Copy all netCDF attributes and add a missing value attribute.  
+
+    This function copies all the attributes from one netCDF element to another 
+    and adds a missing value attribute to fout. 
+    
+    Parameters
+    ----------
+    fin : 
+        Source netCDF element
+    fout :
+        Target netCDF element
+    missing_value :
+        Value to set as indicator of missing values.
+
+    Examples
+    --------
+    Copy the attributes from one variable to another.
+
+    >>> old_var = nc_old.variables['old']
+    >>> new_var = nc_new.createVariable('new', 'f4', ('y','x',) )
+    >>> new_var[:,:] = old_var[:,:]
+    >>> copy_atts_bad_fill( old_var,new_var, -9999. )
+    """
+    
+    # get a list of global attribute names from the incoming file
+    atts = fin.ncattrs()
+    
+    # place those attributes in the outgoing file
+    for ii in range(len(atts)) :
+        fout.setncattr(atts[ii], fin.getncattr(atts[ii]))
+            
+    fout.setncattr('missing_value', missing_value)

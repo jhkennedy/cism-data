@@ -65,13 +65,47 @@ holes and correct/reduce errors in the interior.
 
 """
 
+import sys
+import scipy, scipy.interpolate
+import pyproj
 import numpy as np
-from scipy import interpolate
 
-from util.ncfunc import copy_atts
 from util import speak
+from util.ncfunc import copy_atts
+from util import projections 
+import util.interpolate as interp
 
-def get_velocity(args, nc_insar, nc_base, trans):
+def velocity_epsg3413(args, nc_insar, nc_base, base):
+    insar = projections.DataGrid()
+    insar.y = nc_insar.variables['y']
+    insar.x = nc_insar.variables['x']
+    insar.ny = insar.y[:].shape[0]
+    insar.nx = insar.x[:].shape[0]
+    insar.make_grid()
+
+    for var in ['vy','vx','ey','ex'] :
+        speak.verbose(args,'   Interpolating '+var+' and writing to base.')
+        sys.stdout.write("   [%-60s] %d%%" % ('='*0, 0.))
+        sys.stdout.flush()
+        insar_data = nc_insar.variables[var][:,:]
+        
+        insar_to_base = scipy.interpolate.RectBivariateSpline( insar.y[:], insar.x[:], insar_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
+        base_data = np.zeros( base.dims )
+        for ii in range(0, base.nx):
+            ctr = (ii*60)/base.nx
+            sys.stdout.write("\r   [%-60s] %d%%" % ('='*ctr, ctr/60.*100.))
+            sys.stdout.flush()
+            base_data[:,ii] = insar_to_base.ev(base.y_grid[:,ii], base.x_grid[:,ii] )
+        sys.stdout.write("\r   [%-60s] %d%%\n" % ('='*60, 100.))
+        sys.stdout.flush()
+        
+        base.var = nc_base.createVariable(var, 'f4', ('y','x',) )
+        base.var[:] = base_data[:]  
+        copy_atts(nc_insar.variables[var], base.var)
+
+
+
+def velocity_bamber(args, nc_insar, nc_base, trans):
     """Get the velocities from the insar data.
 
     This function pulls in the `vx`, `vy`, `ex`  and `ey` variables from the
@@ -108,7 +142,7 @@ def get_velocity(args, nc_insar, nc_base, trans):
         insar_data[:,:] = insar_var[:,:]
 
         speak.verbose(args,"   Interpolating "+vv+".")
-        insar_to_base = interpolate.RectBivariateSpline( insar_y[:], insar_x[:], insar_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
+        insar_to_base = scipy.interpolate.RectBivariateSpline( insar_y[:], insar_x[:], insar_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
 
         for ii in range(0, trans.nx):
             base_data[:,ii] = insar_to_base.ev(trans.y_grid[:,ii], trans.x_grid[:,ii] )

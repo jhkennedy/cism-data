@@ -1,0 +1,37 @@
+build_EPSG3413_greenland.py
+    Still need fields:
+        landcover
+        mask
+        projection information (cf compliant)
+
+bild_Bamber_greenland.py
+    Remove CKTree as it's incredibly slow
+    still need fields:
+        lat
+        lon
+        landcover
+        mask
+        projection information (cf compliant)
+
+scrip_grid.py
+    make entirely independent
+
+build_*
+    Remove redundant:
+        add_time(), coarsen() in data/bamberdem.py and data/epsg3413.py can be combined and placed in util (they aren't grid specific).
+    combine
+
+All:
+    fix all FIXMEs
+    Python 2 and 3 compatibility
+    clean up the python
+    PEP8 conformance
+
+
+
+Document:
+    All functions
+    All files
+    check all comments
+    check all current documentation
+
