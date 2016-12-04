@@ -70,7 +70,7 @@ def transform(base, proj1, proj2):
 
     return trans
 
-
+#FIXME: doesn't use args!
 def greenland(args, lc_bamber):
     """The projections and tranformation grids for Greenland.
 
@@ -92,8 +92,10 @@ def greenland(args, lc_bamber):
         A proj class instance that holds the EPSG:3413 projection.
  
     """
-    proj_epsg3413 = pyproj.Proj('+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +units=m')
-        # InSAR data in this projections
+    #NOTE: NSIDC sea ice polar stereographic north
+    proj_epsg3413 = pyproj.Proj('+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+    #NOTE: WGS84 Arctic polar stereographic
+    proj_epsg3995 = pyproj.Proj('+proj=stere +lat_0=90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
 
     # EIGEN-GL04C referenced data:
     #----------------------------
@@ -114,3 +116,23 @@ def greenland(args, lc_bamber):
 def equal_area(min_lat, max_lat, lon_0):
     proj_aea = pyproj.Proj('+proj=aea +lat_1='+str(min_lat)+' +lat_2='+str(max_lat)+' +lat_0='+str((max_lat+min_lat)/2.)+' +lon_0='+str(lon_0))
     return proj_aea
+
+def antarctica(lc_bamber):
+    #NOTE: NSIDC sea ice polar stereographic south
+    proj_epsg3412 = pyproj.Proj('+proj=stere +lat_0=-90 +lat_ts=-70 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+    #NOTE: WGS84 Antarctic polar stereographic
+    proj_epsg3031 = pyproj.Proj('+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+
+    # EIGEN-GL04C referenced data:
+    #----------------------------
+    # unfortunately, bed, surface, and thickness data is referenced to 
+    # EIGEN-GL04C which doesn't exist in proj4. However, EGM2008 should
+    # be within ~1m everywhere (and within 10-20 cm in most places) so 
+    # we use the egm08 projection which is available in proj4
+    path_bamber = os.path.dirname(lc_bamber)
+    if not ( os.path.exists(path_bamber+'/egm08_25.gtx') ):
+        raise Exception("No "+path_bamber+"/egm08_25.gtx ! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
+    
+    proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_0=-90 +lat_ts=71.0 +lon_0=0.0 +k_0=1.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
+    
+    return (proj_epsg3412, proj_eigen_gl04c)

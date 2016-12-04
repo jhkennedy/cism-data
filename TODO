@@ -3,6 +3,9 @@ build_EPSG3413_greenland.py
         landcover
         mask
         projection information (cf compliant)
+    Fix:
+        topg -- garbage large values in corners
+        bheatflx -- make negative, fill with a constant, missing value attribute not agreeing
 
 bild_Bamber_greenland.py
     Remove CKTree as it's incredibly slow
@@ -26,7 +29,8 @@ All:
     Python 2 and 3 compatibility
     clean up the python
     PEP8 conformance
-
+    numpy vs as np
+    in status bars, switch ctr / to integer division //
 
 
 Document:
