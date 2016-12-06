@@ -148,4 +148,5 @@ scrip.area.units = 'square degrees'
 
 nc_base.close()
 nc_scrip.close()
+os.chmod(lc_scrip, 0o644)   # uses an octal number!
 
