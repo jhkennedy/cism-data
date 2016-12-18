@@ -18,6 +18,7 @@ bild_Bamber_greenland.py
 
 scrip_grid.py
     make entirely independent
+    MAKE SURE RIGHT PROJECTION!
 
 build_*
     Remove redundant:
