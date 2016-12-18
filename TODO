@@ -5,7 +5,7 @@ build_EPSG3413_greenland.py
         projection information (cf compliant)
     Fix:
         topg -- garbage large values in corners
-        bheatflx -- make negative (X), fill with a constant (X), missing value attribute not agreeing
+        bheatflx -- missing value attribute not agreeing
         vx,vy,ex,ey -- better metadata 
         make 1km grid nx and ny a factor of 128 (nx = 128*something, ny=128*something)
         Conservative interpolation?

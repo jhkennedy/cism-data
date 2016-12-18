@@ -185,7 +185,7 @@ base.area0.shape = base.x0_grid.shape
 path_climo, name_climo = os.path.split(args.input)
 lc_climo = os.path.join(path_climo, 'climo_'+name_climo)
 
-nc_climo = Dataset(lc_climo, 'w')
+nc_climo = Dataset(lc_climo, 'w', format='NETCDF4')
 nc_climo.createDimension('time', None )
 nc_climo.createDimension('y1', base.ny)
 nc_climo.createDimension('x1', base.nx)

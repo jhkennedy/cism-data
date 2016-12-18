@@ -55,7 +55,7 @@ def build_base (f_base, nc_bamber):
     nc_bamber :
         An opened netCDF Dataset containing the Bamber dataset.
     """
-    nc_base = Dataset(f_base,'w')
+    nc_base = Dataset(f_base,'w', format='NETCDF4')
 
     bamber_y = nc_bamber.variables['projection_y_coordinate']
     bamber_ny = bamber_y[:].shape[0] # number of y points for 1km grid
@@ -121,7 +121,7 @@ def add_time (args, f_base, f_1km, f_template):
         base.nx = base.x[ x_shrink[0]:x_shrink[1] ].shape[0]
 
     speak.verbose(args,"   Writing "+f_1km)
-    nc_1km = Dataset(f_1km, 'w')
+    nc_1km = Dataset(f_1km, 'w', format='NETCDF4')
     nc_1km.createDimension('time', None )
     nc_1km.createDimension('y1', base.ny)
     nc_1km.createDimension('x1', base.nx)
@@ -199,7 +199,7 @@ def coarsen(args, f_base, f_template, coarse_list):
 
         speak.verbose(args,"   Writing "+f_coarse)
         
-        nc_coarse = Dataset( f_coarse,'w' )
+        nc_coarse = Dataset( f_coarse,'w', format='NETCDF4' )
         nc_coarse.createDimension('time', None )
         nc_coarse.createDimension('y1', coarse.ny)
         nc_coarse.createDimension('x1', coarse.nx)

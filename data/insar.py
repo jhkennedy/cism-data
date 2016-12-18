@@ -99,6 +99,12 @@ def velocity_epsg3413(args, nc_insar, nc_base, base):
         sys.stdout.write("\r   [%-60s] %d%%\n" % ('='*60, 100.))
         sys.stdout.flush()
         
+        data_min = np.amin( insar_data[ insar_data[:,:] != -9999.] )
+        data_max = np.amax( insar_data[ insar_data[:,:] != -9999.] )
+
+        data_mask = np.ma.masked_outside(base_data, data_min, data_max)
+        base_data[ data_mask.mask ] = -9999.
+        
         base.var = nc_base.createVariable(var, 'f4', ('y','x',) )
         base.var[:] = base_data[:]  
         copy_atts(nc_insar.variables[var], base.var)
@@ -147,11 +153,11 @@ def velocity_bamber(args, nc_insar, nc_base, trans):
         for ii in range(0, trans.nx):
             base_data[:,ii] = insar_to_base.ev(trans.y_grid[:,ii], trans.x_grid[:,ii] )
         
-        data_min = np.amin( insar_data[ insar_data[:,:] != -2.e9] )
-        data_max = np.amax( insar_data[ insar_data[:,:] != -2.e9] )
+        data_min = np.amin( insar_data[ insar_data[:,:] != -9999.] )
+        data_max = np.amax( insar_data[ insar_data[:,:] != -9999.] )
 
         data_mask = np.ma.masked_outside(base_data, data_min, data_max)
-        base_data[ data_mask.mask ] = -2.e9
+        base_data[ data_mask.mask ] = -9999.
         
         speak.verbose(args,"   Writing "+vv+" to base.")
         base_var = nc_base.createVariable( vv, 'f4', ('y','x',) )

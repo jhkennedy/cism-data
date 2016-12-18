@@ -20,7 +20,7 @@ def build_base(f_base, f_epsg, d_meters):
     EPSG.y = np.arange(epsg['ll'][1], epsg['ur'][1], d_meters)
     EPSG.ny = len(EPSG.y)
 
-    nc_base = Dataset(f_base,'w')
+    nc_base = Dataset(f_base,'w', format='NETCDF4')
     nc_base.createDimension('y',EPSG.ny)
     nc_base.createDimension('x',EPSG.nx)
     
@@ -87,7 +87,7 @@ def add_time(args, f_base, f_1km, f_template, f_epsg_shrunk):
         base.nx = base.x[ x_shrink[0]:x_shrink[1] ].shape[0]
 
     speak.verbose(args,"   Writing "+f_1km)
-    nc_1km = Dataset(f_1km, 'w')
+    nc_1km = Dataset(f_1km, 'w', format='NETCDF4')
     nc_1km.createDimension('time', None )
     nc_1km.createDimension('y1', base.ny)
     nc_1km.createDimension('x1', base.nx)

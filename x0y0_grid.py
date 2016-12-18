@@ -65,7 +65,7 @@ base.lat0_grid = lat0_grid
 path_grid0, name_grid0 = os.path.split(args.input)
 lc_grid0 = os.path.join(path_grid0, 'grid0_'+name_grid0)
 
-nc_grid0 = Dataset(lc_grid0, 'w')
+nc_grid0 = Dataset(lc_grid0, 'w', format='NETCDF4')
 nc_grid0.createDimension('time', None )
 nc_grid0.createDimension('y0', base.ny-1)
 nc_grid0.createDimension('x0', base.nx-1)

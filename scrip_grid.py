@@ -110,7 +110,7 @@ sys.stdout.write("\r   [%-60s] %d%%\n" % ('='*60, 100.))
 path_scrip, name_scrip = os.path.split(args.input)
 lc_scrip = os.path.join(path_scrip, 'SCRIPgrid_'+name_scrip)
 
-nc_scrip = Dataset(lc_scrip, 'w') 
+nc_scrip = Dataset(lc_scrip, 'w', format='NETCDF4') 
 nc_scrip.createDimension('grid_size', base.N)
 nc_scrip.createDimension('grid_corners', 4)
 nc_scrip.createDimension('grid_rank', 1)
