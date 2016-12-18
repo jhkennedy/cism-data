@@ -84,10 +84,14 @@ def bheatflx_artm_epsg3413(args, nc_seaRise, nc_base, base, proj_epsg3413, proj_
         base_x_mask = np.ma.masked_outside(base2bamber.x_grid, seaRise.x[0], seaRise.x[-1])
         base_masked = np.ma.masked_array(base_bamber, mask=np.logical_or(base_y_mask.mask,base_x_mask.mask))
 
-        base_bamber[base_masked.mask] = -9999.
+        if base_var != 'bheatflx':
+            base_bamber[base_masked.mask] = -9999.
 
         base.var = nc_base.createVariable(base_var, 'f4', ('y','x',) )
-        base.var[:] = base_bamber[:]  
+        if base_var == 'bheatflx':
+            base.var[:] = -base_bamber[:] # invert sign!
+        else:
+            base.var[:] = base_bamber[:]  
         copy_atts_add_fill(nc_seaRise.variables[sea_var], base.var, -9999.)
         
      

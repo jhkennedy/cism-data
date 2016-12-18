@@ -5,7 +5,13 @@ build_EPSG3413_greenland.py
         projection information (cf compliant)
     Fix:
         topg -- garbage large values in corners
-        bheatflx -- make negative, fill with a constant, missing value attribute not agreeing
+        bheatflx -- make negative (X), fill with a constant (X), missing value attribute not agreeing
+        vx,vy,ex,ey -- better metadata 
+        make 1km grid nx and ny a factor of 128 (nx = 128*something, ny=128*something)
+        Conservative interpolation?
+            RACMO
+            bed?
+
 
 bild_Bamber_greenland.py
     Remove CKTree as it's incredibly slow

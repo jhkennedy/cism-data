@@ -117,6 +117,7 @@ def equal_area(min_lat, max_lat, lon_0):
     proj_aea = pyproj.Proj('+proj=aea +lat_1='+str(min_lat)+' +lat_2='+str(max_lat)+' +lat_0='+str((max_lat+min_lat)/2.)+' +lon_0='+str(lon_0))
     return proj_aea
 
+
 def antarctica(lc_bamber):
     #NOTE: NSIDC sea ice polar stereographic south
     proj_epsg3412 = pyproj.Proj('+proj=stere +lat_0=-90 +lat_ts=-70 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
