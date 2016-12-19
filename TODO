@@ -4,10 +4,8 @@ build_EPSG3413_greenland.py
         mask
         projection information (cf compliant)
     Fix:
-        topg -- garbage large values in corners
-        bheatflx -- missing value attribute not agreeing
-        vx,vy,ex,ey -- better metadata 
-        make 1km grid nx and ny a factor of 128 (nx = 128*something, ny=128*something)
+        rectbivariatespline uses missing values in interp. Need to mask out bad values after interp somehow... (use max and mins?)
+            started this in icebridge... still need to test
         Conservative interpolation?
             RACMO
             bed?

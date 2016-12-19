@@ -110,11 +110,14 @@ def add_time(args, f_base, f_1km, f_template, f_epsg_shrunk):
     for var_name, var_data in nc_base.variables.iteritems() : 
         if (var_name != 'x' and var_name != 'y'):
             var_1km = nc_1km.createVariable(var_name, 'f4', ('time','y1','x1',))
-            if args.extended:
-                var_1km[0,:,:] = var_data[:,:]
-            else:
-                var_1km[0,:,:] = var_data[ y_shrink[0]:y_shrink[1] , x_shrink[0]:x_shrink[1] ]
             copy_atts(var_data, var_1km)
+            vd = var_data[:,:]
+            msk = vd < -6000.
+            vd[msk] = -9999.
+            if args.extended:
+                var_1km[0,:,:] = vd[:,:]
+            else:
+                var_1km[0,:,:] = vd[ y_shrink[0]:y_shrink[1] , x_shrink[0]:x_shrink[1] ]
     #copy_atts(var_data, var_1km)
 
     nc_base.close()

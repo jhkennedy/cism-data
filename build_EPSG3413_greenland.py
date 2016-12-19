@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import os
 import sys
@@ -158,21 +158,6 @@ nc_massCon.close()
 #==== Done getting data ====
 #===========================
 nc_base.close()
-
-#==== add time dim and shrink ====
-# apply to all the variables and  
-# shrink to size around ice sheet 
-#=================================
-speak.notquiet(args,"\nAdding the time dimension and creating the 1km dataset.")
-epsg3413.add_time(args, f_base, f_1km, f_template, f_epsg_shr)
-
-#==== Coarsen ==== 
-# make 2, 4 and 8  
-# km datasets      
-#==================
-speak.notquiet(args,"\nCreating coarser datasets.")
-coarse_list = [2,4,5,8]   # in km
-bamberdem.coarsen(args, f_1km, f_template, coarse_list)
 
 #==== and done! ====
 #===================

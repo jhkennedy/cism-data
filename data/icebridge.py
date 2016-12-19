@@ -101,6 +101,13 @@ def mcb_epsg3413(args, nc_massCon, nc_bamber, nc_base, base, proj_epsg3413, proj
         speak.verbose(args,  '\n      Begin '+var+':')
         pri_data = np.ma.masked_equal( nc_massCon.variables[var_list[0]][::-1,:] , -9999)
         sec_data = np.ma.masked_values( nc_bamber.variables[var_list[1]][:,:], -9999.)
+        
+        pri_range = [pri_data.min(), pri_data.max()]
+        rng = [sec_data.min(), sec_data.max()]
+        if pri_range[0] < rng[0]:
+            rng[0] = pri_range[0]
+        if pri_range[1] > rng[1]:
+            rng[1] = pri_range[1]
 
         # fill in missing data values in the IceBridge data with the Bamber DEM
         speak.verbose(args,"         Combining IceBridge and Bamber DEMs.")
@@ -156,14 +163,19 @@ def mcb_epsg3413(args, nc_massCon, nc_bamber, nc_base, base, proj_epsg3413, proj
 
         base_bamber[~base_mcb_masked.mask] = base_mcb_masked[~base_mcb_masked.mask]
 
+        #NOTE: Make sure all values fall within a reasonable range as 
+        #      RectBivariateSpine interps using the missing values
+        base_bamber[base_bamber < rng[0]] = -9999.
+        base_bamber[base_bamber > rng[1]] = -9999.
+
         if var == 'topg':
             base.topg = nc_base.createVariable('topg', 'f4', ('y','x',) )
             base.topg[:] = base_bamber[:]  
-            copy_atts_bad_fill(nc_massCon.variables['bed'], base.topg, -9999.)
+            copy_atts_add_fill(nc_massCon.variables['bed'], base.topg, -9999.)
         else:
             base.topgerr = nc_base.createVariable('topgerr', 'f4', ('y','x',) )
             base.topgerr[:] = base_bamber[:]  
-            copy_atts_bad_fill(nc_massCon.variables['errbed'], base.topg, -9999.)
+            copy_atts_add_fill(nc_massCon.variables['errbed'], base.topg, -9999.)
 
 
 def mcb_bamber(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl04c, proj_epsg3413):
