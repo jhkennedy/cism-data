@@ -6,6 +6,9 @@ data/*
 !data/*.py
 complete/*
 
+# ignore the extra projection information
+util/egm08_25.gtx
+
 #### joe made this: https://goel.io/joe
 
 #####=== Vim ===#####
