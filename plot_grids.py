@@ -12,7 +12,6 @@ from util import projections
 from util.ncfunc import get_nc_file
 
 
-lc_bamber   = 'data/BamberDEM/Greenland_bedrock_topography_V3.nc'
 #lc_base   = 'complete/greenland_1km_2016_11_23.mcb.nc'
 lc_base   = 'complete/greenland_1km_2016_03_17.mcb.nc'
 
@@ -64,7 +63,7 @@ speak.notquiet(args,"   Done!")
 #=====================
 speak.notquiet(args,"\nGetting the projections.")
 
-proj_epsg3413, proj_eigen_gl04c = projections.greenland(args, lc_bamber)
+proj_epsg3413, proj_eigen_gl04c = projections.greenland()
 
 speak.notquiet(args,"   Done!")
 

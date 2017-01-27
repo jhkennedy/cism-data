@@ -45,7 +45,7 @@ import pyproj
 import numpy as np
 
 from util import speak
-from util.ncfunc import copy_atts, copy_atts_bad_fill
+from util.ncfunc import copy_atts, copy_atts_bad_fill, copy_atts_add_fill
 from util import projections 
 import util.interpolate as interp
 
@@ -171,11 +171,11 @@ def mcb_epsg3413(args, nc_massCon, nc_bamber, nc_base, base, proj_epsg3413, proj
         if var == 'topg':
             base.topg = nc_base.createVariable('topg', 'f4', ('y','x',) )
             base.topg[:] = base_bamber[:]  
-            copy_atts_add_fill(nc_massCon.variables['bed'], base.topg, -9999.)
+            copy_atts_bad_fill(nc_massCon.variables['bed'], base.topg, -9999.)
         else:
             base.topgerr = nc_base.createVariable('topgerr', 'f4', ('y','x',) )
             base.topgerr[:] = base_bamber[:]  
-            copy_atts_add_fill(nc_massCon.variables['errbed'], base.topg, -9999.)
+            copy_atts_bad_fill(nc_massCon.variables['errbed'], base.topg, -9999.)
 
 
 def mcb_bamber(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl04c, proj_epsg3413):

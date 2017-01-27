@@ -5,7 +5,8 @@ build_EPSG3413_greenland.py
         projection information (cf compliant)
     Fix:
         rectbivariatespline uses missing values in interp. Need to mask out bad values after interp somehow... (use max and mins?)
-            started this in icebridge... still need to test
+            seems to work in icebridge, but not well in insar...
+            Also, extend to all other Rec code 
         Conservative interpolation?
             RACMO
             bed?
@@ -22,7 +23,7 @@ bild_Bamber_greenland.py
 
 scrip_grid.py
     make entirely independent
-    MAKE SURE RIGHT PROJECTION!
+    option to pick projection
 
 build_*
     Remove redundant:

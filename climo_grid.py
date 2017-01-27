@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import os
 import sys
@@ -37,8 +37,7 @@ volume.add_argument("-q", "--quiet",   help="Run silently",                  act
 args = parser.parse_args()
 
 # get the projections
-lc_bamber = 'data/BamberDEM/Greenland_bedrock_topography_V3.nc'
-proj_epsg3413, proj_eigen_gl04c = projections.greenland(args, lc_bamber)
+proj_epsg3413, proj_eigen_gl04c = projections.greenland()
 
 surface_area_earth = 510065621724000.0 # unit: m^2
 #source: http://home.vikenfiber.no/humrum/WGS84_Eng.html

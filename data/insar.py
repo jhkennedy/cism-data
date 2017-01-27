@@ -87,7 +87,9 @@ def velocity_epsg3413(args, nc_insar, nc_base, base):
         speak.verbose(args,'   Interpolating '+var+' and writing to base.')
         sys.stdout.write("   [%-60s] %d%%" % ('='*0, 0.))
         sys.stdout.flush()
-        insar_data = nc_insar.variables[var][:,:]
+        insar_data = np.ma.masked_values(nc_insar.variables[var][:,:], -2.e9)
+        data_min = insar_data.min() 
+        data_max = insar_data.max() 
         
         insar_to_base = scipy.interpolate.RectBivariateSpline( insar.y[:], insar.x[:], insar_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
         base_data = np.zeros( base.dims )
@@ -99,11 +101,8 @@ def velocity_epsg3413(args, nc_insar, nc_base, base):
         sys.stdout.write("\r   [%-60s] %d%%\n" % ('='*60, 100.))
         sys.stdout.flush()
         
-        data_min = np.amin( insar_data[ insar_data[:,:] != -9999.] )
-        data_max = np.amax( insar_data[ insar_data[:,:] != -9999.] )
-
-        data_mask = np.ma.masked_outside(base_data, data_min, data_max)
-        base_data[ data_mask.mask ] = -9999.
+        base_data[base_data < data_min] = -2.e9
+        base_data[base_data > data_max] = -2.e9
         
         base.var = nc_base.createVariable(var, 'f4', ('y','x',) )
         base.var[:] = base_data[:]  
@@ -136,7 +135,6 @@ def velocity_bamber(args, nc_insar, nc_base, trans):
     insar_x = nc_insar.variables['x']
     insar_nx = insar_x[:].shape[0]
 
-    insar_data = np.ndarray( (insar_ny, insar_nx) )
     base_data = np.ndarray( (trans.ny,trans.nx) )
 
 
@@ -145,7 +143,10 @@ def velocity_bamber(args, nc_insar, nc_base, trans):
         base_data[:,:] = 0.
         
         insar_var = nc_insar.variables[ vv ]
-        insar_data[:,:] = insar_var[:,:]
+        insar_data = np.ma.masked_values( nc_bamber.variables[var_list[1]][:,:], -2.e9)
+        data_min = insar_data.min() 
+        data_max = insar_data.max() 
+
 
         speak.verbose(args,"   Interpolating "+vv+".")
         insar_to_base = scipy.interpolate.RectBivariateSpline( insar_y[:], insar_x[:], insar_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
@@ -153,11 +154,8 @@ def velocity_bamber(args, nc_insar, nc_base, trans):
         for ii in range(0, trans.nx):
             base_data[:,ii] = insar_to_base.ev(trans.y_grid[:,ii], trans.x_grid[:,ii] )
         
-        data_min = np.amin( insar_data[ insar_data[:,:] != -9999.] )
-        data_max = np.amax( insar_data[ insar_data[:,:] != -9999.] )
-
-        data_mask = np.ma.masked_outside(base_data, data_min, data_max)
-        base_data[ data_mask.mask ] = -9999.
+        base_data[base_data < data_min] = -2.e9
+        base_data[base_data > data_max] = -2.e9
         
         speak.verbose(args,"   Writing "+vv+" to base.")
         base_var = nc_base.createVariable( vv, 'f4', ('y','x',) )

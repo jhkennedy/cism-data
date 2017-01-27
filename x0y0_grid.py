@@ -34,8 +34,7 @@ volume.add_argument("-q", "--quiet",   help="Run silently",                  act
 args = parser.parse_args()
 
 # get the projections
-lc_bamber = 'data/BamberDEM/Greenland_bedrock_topography_V3.nc'
-proj_epsg3413, proj_eigen_gl04c = projections.greenland(args, lc_bamber)
+proj_epsg3413, proj_eigen_gl04c = projections.greenland()
 
 # load the dataset
 nc_base = Dataset(args.input, 'r')

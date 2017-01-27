@@ -70,8 +70,7 @@ def transform(base, proj1, proj2):
 
     return trans
 
-#FIXME: doesn't use args!
-def greenland(args, lc_bamber):
+def greenland():
     """The projections and tranformation grids for Greenland.
 
     This function creates the proj projections and a transformed DataGrid() for
@@ -103,13 +102,13 @@ def greenland(args, lc_bamber):
     # EIGEN-GL04C which doesn't exist in proj4. However, EGM2008 should
     # be within ~1m everywhere (and within 10-20 cm in most places) so 
     # we use the egm08 projection which is available in proj4
-    path_bamber = os.path.dirname(lc_bamber)
-    if not ( os.path.exists(path_bamber+'/egm08_25.gtx') ):
-        raise Exception("No "+path_bamber+"/egm08_25.gtx ! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
+    path_egm08 = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'egm08_25.gtx')
+    if not ( os.path.exists(path_egm08) ):
+        raise Exception("No "+path_egm08+"! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
     
     #NOTE: Bamber projection appears to not actually have any fasle northings or eastings. 
     #proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
-    proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
+    proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids='+path_egm08)
 
     return (proj_epsg3413, proj_eigen_gl04c)
 
@@ -118,7 +117,7 @@ def equal_area(min_lat, max_lat, lon_0):
     return proj_aea
 
 
-def antarctica(lc_bamber):
+def antarctica():
     #NOTE: NSIDC sea ice polar stereographic south
     proj_epsg3412 = pyproj.Proj('+proj=stere +lat_0=-90 +lat_ts=-70 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
     #NOTE: WGS84 Antarctic polar stereographic
@@ -130,10 +129,10 @@ def antarctica(lc_bamber):
     # EIGEN-GL04C which doesn't exist in proj4. However, EGM2008 should
     # be within ~1m everywhere (and within 10-20 cm in most places) so 
     # we use the egm08 projection which is available in proj4
-    path_bamber = os.path.dirname(lc_bamber)
-    if not ( os.path.exists(path_bamber+'/egm08_25.gtx') ):
-        raise Exception("No "+path_bamber+"/egm08_25.gtx ! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
+    path_egm08 = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'egm08_25.gtx')
+    if not ( os.path.exists(path_egm08) ):
+        raise Exception("No "+path_egm08+"! Get it here: http://download.osgeo.org/proj/vdatum/egm08_25/egm08_25.gtx") 
     
-    proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_0=-90 +lat_ts=71.0 +lon_0=0.0 +k_0=1.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
+    proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_0=-90 +lat_ts=71.0 +lon_0=0.0 +k_0=1.0 +geoidgrids='+path_egm08)
     
     return (proj_epsg3412, proj_eigen_gl04c)

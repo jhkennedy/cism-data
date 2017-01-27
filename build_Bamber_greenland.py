@@ -96,7 +96,7 @@ speak.notquiet(args,"   Done!")
 #=====================
 speak.notquiet(args,"\nGetting the projections.")
 
-proj_epsg3413, proj_eigen_gl04c = projections.greenland(args, lc_bamber)
+proj_epsg3413, proj_eigen_gl04c = projections.greenland()
 
 speak.notquiet(args,"   Done!")
 
