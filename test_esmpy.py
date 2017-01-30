@@ -1,18 +1,39 @@
 #!/usr/bin/env python2
 
 import os
-import ESMF
-import numpy as np
-
+import sys
+import time
 import argparse
+
 from mpl_toolkits.basemap import Basemap
 from matplotlib import pyplot as plt
+import numpy as np
+import ESMF
 
 from util import speak
 from util import projections
 from util.ncfunc import get_nc_file
 
 ESMF.Manager(debug=True)
+
+class rt():
+    def __init__(self):
+        self.start = time.time()
+        self.last = self.start
+        self.now = self.start
+
+    def log(self):
+        self.now = time.time()
+        print("-"*80)
+        print("Total elapsed time: "+str(self.now - self.start))
+        print(" Time since last log: "+str(self.now - self.last)
+        print("-"*80)
+        self.last = self.now
+
+
+TIME = rt()
+TIME.log()
+
 
 epsg_cism  = 'greenland_1km_test.nc'
 epsg_scrip = 'SCRIPgrid_greenland_1km_test.nc'
@@ -65,17 +86,19 @@ speak.verbose(args,"   Found InSAR data")
 
 insar_grid = ESMF.Grid(filename=os.path.join(os.getcwd(),epsg_InSAR), filetype=ESMF.FileFormat.SCRIP)
 insar_field = ESMF.Field(insar_grid, staggerloc=ESMF.StaggerLoc.CENTER)
-insar_field.data[:,:] = nc_insar.variables['vx'][:,:] 
+insar_field.data[:,:] = nc_insar.variables['vx'][:,:].T 
 
 cism_grid = ESMF.Grid(filename=os.path.join(os.getcwd(),epsg_scrip), filetype=ESMF.FileFormat.SCRIP)
 cism_field = ESMF.Field(cism_grid, staggerloc=ESMF.StaggerLoc.CENTER)
 
+TIME.log()
 print('regridding...')
 regrid = ESMF.Regrid(insar_field, cism_field, regrid_method=ESMF.RegridMethod.BILINEAR, 
                      unmapped_action=ESMF.UnmappedAction.IGNORE)
 cism_field = regrid(insar_field, cism_field)
 
 
+TIME.log()
 print('plotting...')
 plt.figure(1, figsize=(10,8), dpi=150)
 plt.rc('text', usetex=True)
@@ -122,4 +145,5 @@ glmap.colorbar()
 plt.tight_layout()
 plt.show()
 
+TIME.log()
 print('Done!')
