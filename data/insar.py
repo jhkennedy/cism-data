@@ -40,18 +40,20 @@ dataset with variables vx, vy, ex, and ey. The NetCDF dataset is on a 5460 x
 
 References
 ----------
+As a condition of using these data, you must cite the use of this data set
+using the following citation:
+
 Joughin, I., B. Smith, I. Howat, and T. Scambos.. 2010. MEaSUREs Greenland Ice 
 Sheet Velocity Map from InSAR Data. [indicate subset used]. Boulder, Colorado 
-USA: National Snow and Ice Data Center. 
+USA: NASA DAAC at the National Snow and Ice Data Center. 
+doi:10.5067/MEASURES/CRYOSPHERE/nsidc-0478.001
 
-Papers discussing this data include:
+NSIDC kindly requests that you acknowledge the use of this data set by
+referencing the following peer-reviewed publication:
 
 Joughin, I., B. Smith, I. Howat, T. Scambos, and T. Moon. 2010. Greenland Flow 
 Variability from Ice-Sheet-Wide Velocity Mapping. Journal of Glaciology 
 56(197): 415-430. 
-
-Moon, T., Joughin, I., Smith, B. & Howat, I. 21st-Century Evolution of Greenland 
-Outlet Glacier Velocities. Science 336, 576-578 (2012).
 
 2012 Set
 --------
@@ -90,7 +92,9 @@ def velocity_epsg3413(args, nc_insar, nc_base, base):
         insar_data = np.ma.masked_values(nc_insar.variables[var][:,:], -2.e9)
         data_min = insar_data.min() 
         data_max = insar_data.max() 
-        
+        print('\nInSAR Max: '+str(data_max))
+        print(  'InSAR Min: '+str(data_min))
+
         insar_to_base = scipy.interpolate.RectBivariateSpline( insar.y[:], insar.x[:], insar_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
         base_data = np.zeros( base.dims )
         for ii in range(0, base.nx):
@@ -107,6 +111,8 @@ def velocity_epsg3413(args, nc_insar, nc_base, base):
         base.var = nc_base.createVariable(var, 'f4', ('y','x',) )
         base.var[:] = base_data[:]  
         copy_atts(nc_insar.variables[var], base.var)
+        base.var.grid_mapping = 'epsg_3413'
+        base.var.coordinates = 'lon lat'
 
 
 

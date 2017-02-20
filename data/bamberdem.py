@@ -194,6 +194,8 @@ def coarsen(args, f_base, f_template, coarse_list):
     base.x = nc_base.variables['x1']
     base.nx = base.x[:].shape[0]
 
+    base.proj = nc_base.variables['epsg_3413']
+    
     coarse_names = []
     for skip in coarse_list :
         coarse = DataGrid()
@@ -222,14 +224,16 @@ def coarsen(args, f_base, f_template, coarse_list):
         coarse.x[:] = base.x[::skip]
         coarse.time[0] = 0.
 
+        coarse.proj = nc_coarse.createVariable('epsg_3413', 'b')
+        copy_atts(base.proj, coarse.proj)
 
         for var_name, var_data in nc_base.variables.iteritems() : 
-            if var_name not in  ['time', 'x1', 'y1', 'lat', 'lon']:
+            if var_name not in  ['time', 'x1', 'y1', 'lat', 'lon', 'epsg_3413']:
                 var_coarse = nc_coarse.createVariable(var_name, 'f4', ('time','y1','x1',))
                 var_coarse[0,:,:] = var_data[0,::skip,::skip]
                 copy_atts(var_data, var_coarse)
             
-            elif var_name not in ['time', 'x1', 'y1']:
+            elif var_name not in ['time', 'x1', 'y1', 'epsg_3413']:
                 var_coarse = nc_coarse.createVariable(var_name, 'f4', ('y1','x1',))
                 var_coarse[:,:] = var_data[::skip,::skip]
                 copy_atts(var_data, var_coarse)

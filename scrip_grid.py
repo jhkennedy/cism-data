@@ -76,27 +76,20 @@ def main(args):
     base.N = base.ny*base.nx
     base.make_grid()
 
-    if 'lon' in nc_base.variables.keys() and 'lat' in nc_base.variables.keys():
-        base.lon_grid = nc_base.variables['lon']
-        base.lat_grid = nc_base.variables['lat']
-    else:
-        lon_grid, lat_grid = proj(base.x_grid.ravel(), base.y_grid.ravel(), inverse=True)
-        lon_grid.shape = base.x_grid.shape 
-        lat_grid.shape = base.x_grid.shape
-        base.lon_grid = lon_grid
-        base.lat_grid  = lat_grid
+    lon_grid, lat_grid = proj(base.x_grid.ravel(), base.y_grid.ravel(), inverse=True)
+    lon_grid.shape = base.x_grid.shape 
+    lat_grid.shape = base.x_grid.shape
+    base.lon_grid = lon_grid
+    base.lat_grid  = lat_grid
 
-    base.ll_y = base.y_grid.flatten() - base.dy/2.  
-    base.ll_x = base.x_grid.flatten() - base.dx/2. 
-
-    base.lr_y = base.y_grid.flatten() - base.dy/2.  
-    base.lr_x = base.x_grid.flatten() + base.dx/2. 
-
-    base.ur_y = base.y_grid.flatten() + base.dy/2.  
-    base.ur_x = base.x_grid.flatten() + base.dx/2. 
-
-    base.ul_y = base.y_grid.flatten() + base.dy/2.  
-    base.ul_x = base.x_grid.flatten() - base.dx/2. 
+    base.ll_y = base.y_grid.flatten(order='F') - base.dy/2.  
+    base.ll_x = base.x_grid.flatten(order='F') - base.dx/2. 
+    base.lr_y = base.y_grid.flatten(order='F') - base.dy/2.  
+    base.lr_x = base.x_grid.flatten(order='F') + base.dx/2. 
+    base.ur_y = base.y_grid.flatten(order='F') + base.dy/2.  
+    base.ur_x = base.x_grid.flatten(order='F') + base.dx/2. 
+    base.ul_y = base.y_grid.flatten(order='F') + base.dy/2.  
+    base.ul_x = base.x_grid.flatten(order='F') - base.dx/2. 
 
     base.ll_lon, base.ll_lat = proj(base.ll_x, base.ll_y, inverse=True)
     base.lr_lon, base.lr_lat = proj(base.lr_x, base.lr_y, inverse=True)
@@ -152,21 +145,19 @@ def main(args):
     #      correctly, and the expected ordering within the netCDF file we are creating will be 
     #      maintained.
     scrip.dims[:] = numpy.array(base.dims)[::-1]
+    #NOTE: Now dumping everything 'F-style' (column-major) order. 
+    scrip.dims[:] = numpy.array(base.dims)[::]
 
     scrip.imask = nc_scrip.createVariable('grid_imask','i4', ('grid_size'))
     scrip.imask[:] = numpy.ones(base.N) 
     scrip.imask.units = 'unitless'
 
     scrip.center_lat = nc_scrip.createVariable('grid_center_lat','f4', ('grid_size'))
-    #FIXME: Handle time dimension... 
-    #scrip.center_lat[:] = base.lat_grid[0,:,:].ravel()
-    scrip.center_lat[:] = base.lat_grid[:,:].ravel()
+    scrip.center_lat[:] = base.lat_grid[:,:].flatten(order='F')
     scrip.center_lat.setncattr('units', 'degrees')
 
     scrip.center_lon = nc_scrip.createVariable('grid_center_lon','f4', ('grid_size'))
-    #FIXME: Handle time dimension... 
-    #scrip.center_lon[:] = base.lon_grid[0,:,:].ravel()
-    scrip.center_lon[:] = base.lon_grid[:,:].ravel()
+    scrip.center_lon[:] = base.lon_grid[:,:].flatten(order='F')
     scrip.center_lon.setncattr('units', 'degrees')
 
     scrip.corner_lat = nc_scrip.createVariable('grid_corner_lat','f4', ('grid_size','grid_corners',))

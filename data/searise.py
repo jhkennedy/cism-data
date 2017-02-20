@@ -91,9 +91,11 @@ def bheatflx_artm_epsg3413(args, nc_seaRise, nc_base, base, proj_epsg3413, proj_
         if base_var == 'bheatflx':
             base.var[:] = -base_bamber[:] # invert sign!
         else:
-            base.var[:] = base_bamber[:]  
+            base.var[:] = base_bamber[:]
+
         copy_atts_add_fill(nc_seaRise.variables[sea_var], base.var, -9999.)
-        
+        base.var.grid_mapping = 'epsg_3413'
+        base.var.coordinates = 'lon lat'
      
 def bheatflx_artm_bamber(args, nc_seaRise, nc_base, base) :
     """Get bheatflx and artm from the sea rise data.

@@ -72,9 +72,15 @@ def acab_epsg3413(args, nc_racmo, nc_bamber, nc_base, base, proj_epsg3413, proj_
     
     base.var = nc_base.createVariable('acab', 'f4', ('y','x',) )
     base.var[:] = base_masked.filled(0.)  
-    copy_atts(nc_racmo.variables['smb'], base.var) #FIXME: check atribute units -- divided by 910 earlier
+    base.var.long_name = 'Water Equivalent Surface Mass Balance'
+    base.var.standard_name = 'land_ice_lwe_surface_specific_mass_balance'
+    base.var.units = 'mm/year' 
+    base.var.grid_mapping = 'epsg_3413'
+    base.var.coordinates = 'lon lat'
+    base.var.source = 'Ian Howat' 
+    base.var.comments = '1961--1990 mean surface mass balance from RACMO 2.0 '
+    
 
-     
 def acab_bamber(args, nc_racmo2p0, nc_base, base):
     """Get acab from the RACMO 2.0 data.
  

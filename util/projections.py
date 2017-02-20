@@ -38,24 +38,26 @@ class DataGrid():
 
 
 def grid_center_latlons(nc_base, base, proj):
-    base.long_grid = nc_base.createVariable('lon', 'f4', ('y','x',))
-    base.long_grid.units = 'degrees'
-    base.long_grid.long_name = 'grid center longitude'
-    base.long_grid.standard_name = 'longitude'
-    base.long_grid.note = 'Created by Joseph H. Kennedy using pyproj.'
+    base.lon_grid = nc_base.createVariable('lon', 'f4', ('y','x',))
+    base.lon_grid.long_name = 'grid center longitude'
+    base.lon_grid.standard_name = 'longitude'
+    base.lon_grid.units = 'degrees_east'
+    base.lon_grid.grid_mapping = 'epsg_3413'
+    base.lon_grid.note = 'Created by Joseph H. Kennedy using pyproj'
 
     base.lat_grid = nc_base.createVariable('lat', 'f4', ('y','x',))
-    base.lat_grid.units = 'degrees'
-    base.lat_grid.lat_name = 'grid center latitude'
+    base.lat_grid.long_name = 'grid center latitude'
     base.lat_grid.standard_name = 'latitude'
-    base.lat_grid.note = 'Created by Joseph H. Kennedy using pyproj.'
+    base.lat_grid.units = 'degrees_north'
+    base.lat_grid.grid_mapping = 'epsg_3413'
+    base.lat_grid.note = 'Created by Joseph H. Kennedy using pyproj'
 
-    long_grid, lat_grid = proj(base.x_grid.ravel(), base.y_grid.ravel(), inverse=True)
-    long_grid.shape = base.x_grid.shape 
+    lon_grid, lat_grid = proj(base.x_grid.ravel(), base.y_grid.ravel(), inverse=True)
+    lon_grid.shape = base.x_grid.shape 
     lat_grid.shape = base.x_grid.shape
 
-    base.long_grid[:,:] = long_grid
-    base.lat_grid[:,:]  = lat_grid
+    base.lon_grid[:,:] = lon_grid
+    base.lat_grid[:,:] = lat_grid
 
 
 def transform(base, proj1, proj2):

@@ -30,11 +30,30 @@ def build_base(f_base, f_epsg, d_meters):
     
     base.y = nc_base.createVariable('y', 'f4', 'y')
     base.y[:] = EPSG.y[:]
-    #FIXME: attributes
+    base.y.long_name = 'y-coordinate in projection'
+    base.y.standard_name = 'projection_y_coordinate'
+    base.y.axis = 'Y'
+    base.y.units = 'meters'
 
     base.x = nc_base.createVariable('x', 'f4', 'x')
     base.x[:] = EPSG.x[:]
-    #FIXME: attributes
+    base.x.long_name = 'x-coordinate in projection'
+    base.x.standard_name = 'projection_x_coordinate'
+    base.x.axis = 'X'
+    base.x.units = 'meters'
+    
+    base.proj = nc_base.createVariable('epsg_3413', 'b')
+    base.proj.grid_mapping_name = 'polar_stereographic' 
+    base.proj.latitude_of_projection_origin = '+90' 
+    base.proj.straight_vertical_longitude_from_pole = '-45' 
+    base.proj.standard_parallel = '70' 
+    base.proj.scale_factor = '1' 
+    base.proj.false_easting = '0' 
+    base.proj.false_northing = '0' 
+    base.proj.ellipsoid = 'WGS84' 
+    base.proj.datum = 'WGS84' 
+    base.proj.units = 'meters' 
+    base.proj.proj4_string = '+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs' 
 
     # create some grids for interpolation
     base.make_grid()
@@ -93,9 +112,15 @@ def add_time(args, f_base, f_1km, f_template, f_epsg_shrunk):
     nc_1km.createDimension('x1', base.nx)
 
     time = nc_1km.createVariable('time', 'f4', ('time',))
+    time.long_name = 'time'
+    time.units = 'common_years since 2009-01-01 00:00:00'
+    time.calendar = '365_day'
+    time.comment = "The initial time here is an estimate of the nominal date for Joughin's 2015 "+ \
+                   "InSAR data. Because this is a synthesis of datasets across many time periods, "+ \
+                   "the inital date is inherently fuzzy and should be changed to suit your purposes."
+    
     y1   = nc_1km.createVariable('y1',   'f4', ('y1',)  )
     x1   = nc_1km.createVariable('x1',   'f4', ('x1',)  )
-
     copy_atts(base.y, y1)
     copy_atts(base.x, x1)
 
@@ -107,8 +132,12 @@ def add_time(args, f_base, f_1km, f_template, f_epsg_shrunk):
         x1[:] = base.x[ x_shrink[0]:x_shrink[1] ]
     time[0] = 0.
 
+    base.proj = nc_base.variables['epsg_3413']
+    proj = nc_1km.createVariable('epsg_3413', 'b')
+    copy_atts(base.proj, proj)
+    
     for var_name, var_data in nc_base.variables.iteritems() : 
-        if var_name not in  ['x', 'y', 'lat', 'lon']:
+        if var_name not in  ['x', 'y', 'lat', 'lon', 'epsg_3413']:
             var_1km = nc_1km.createVariable(var_name, 'f4', ('time','y1','x1',))
             copy_atts(var_data, var_1km)
             if args.extended:
@@ -116,7 +145,7 @@ def add_time(args, f_base, f_1km, f_template, f_epsg_shrunk):
             else:
                 var_1km[0,:,:] = var_data[ y_shrink[0]:y_shrink[1] , x_shrink[0]:x_shrink[1] ]
         
-        elif var_name not in ['x', 'y']:
+        elif var_name not in ['x', 'y', 'epsg_3413']:
             var_1km = nc_1km.createVariable(var_name, 'f4', ('y1','x1',))
             copy_atts(var_data, var_1km)
             if args.extended:

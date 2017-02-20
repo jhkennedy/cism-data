@@ -89,6 +89,9 @@ def mcb_epsg3413(args, nc_massCon, nc_bamber, nc_base, base, proj_epsg3413, proj
     sys.stdout.write("\r   [%-60s] %d%%\n" % ('='*60, 100.))
     sys.stdout.flush()
     copy_atts_bad_fill(massCon.thickness, base.thk, -9999.)
+    base.thk.grid_mapping = 'epsg_3413'
+    base.thk.coordinates = 'lon lat'
+    base.thk.reference = 'M. Morlighem, E. Rignot, J. Mouginot, H. Seroussi and E. Larour, Deeply incised submarine glacial valleys beneath the Greenland Ice Sheet, Nat. Geosci., 7, 418-422, 2014, doi:10.1038/ngeo2167, http://www.nature.com/ngeo/journal/vaop/ncurrent/full/ngeo2167.html'
 
 
     speak.verbose(args,"   Interpolating, with priority, topg and topgerr.")
@@ -168,14 +171,13 @@ def mcb_epsg3413(args, nc_massCon, nc_bamber, nc_base, base, proj_epsg3413, proj
         base_bamber[base_bamber < rng[0]] = -9999.
         base_bamber[base_bamber > rng[1]] = -9999.
 
-        if var == 'topg':
-            base.topg = nc_base.createVariable('topg', 'f4', ('y','x',) )
-            base.topg[:] = base_bamber[:]  
-            copy_atts_bad_fill(nc_massCon.variables['bed'], base.topg, -9999.)
-        else:
-            base.topgerr = nc_base.createVariable('topgerr', 'f4', ('y','x',) )
-            base.topgerr[:] = base_bamber[:]  
-            copy_atts_bad_fill(nc_massCon.variables['errbed'], base.topg, -9999.)
+        base.var = nc_base.createVariable(var, 'f4', ('y','x',) )
+        base.var[:] = base_bamber[:]  
+        copy_atts_bad_fill(nc_massCon.variables[var_list[0]], base.var, -9999.)
+        base.var.grid_mapping = 'epsg_3413'
+        base.var.coordinates = 'lon lat'
+        base.var.reference = 'M. Morlighem, E. Rignot, J. Mouginot, H. Seroussi and E. Larour, Deeply incised submarine glacial valleys beneath the Greenland Ice Sheet, Nat. Geosci., 7, 418-422, 2014, doi:10.1038/ngeo2167, http://www.nature.com/ngeo/journal/vaop/ncurrent/full/ngeo2167.html'
+        
 
 
 def mcb_bamber(args, nc_massCon, nc_bamber, nc_base, base, trans, proj_eigen_gl04c, proj_epsg3413):
