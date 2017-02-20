@@ -82,14 +82,14 @@ def main(args):
     base.lon_grid = lon_grid
     base.lat_grid  = lat_grid
 
-    base.ll_y = base.y_grid.flatten(order='F') - base.dy/2.  
-    base.ll_x = base.x_grid.flatten(order='F') - base.dx/2. 
-    base.lr_y = base.y_grid.flatten(order='F') - base.dy/2.  
-    base.lr_x = base.x_grid.flatten(order='F') + base.dx/2. 
-    base.ur_y = base.y_grid.flatten(order='F') + base.dy/2.  
-    base.ur_x = base.x_grid.flatten(order='F') + base.dx/2. 
-    base.ul_y = base.y_grid.flatten(order='F') + base.dy/2.  
-    base.ul_x = base.x_grid.flatten(order='F') - base.dx/2. 
+    base.ll_y = base.y_grid.flatten(order='C') - base.dy/2.  
+    base.ll_x = base.x_grid.flatten(order='C') - base.dx/2. 
+    base.lr_y = base.y_grid.flatten(order='C') - base.dy/2.  
+    base.lr_x = base.x_grid.flatten(order='C') + base.dx/2. 
+    base.ur_y = base.y_grid.flatten(order='C') + base.dy/2.  
+    base.ur_x = base.x_grid.flatten(order='C') + base.dx/2. 
+    base.ul_y = base.y_grid.flatten(order='C') + base.dy/2.  
+    base.ul_x = base.x_grid.flatten(order='C') - base.dx/2. 
 
     base.ll_lon, base.ll_lat = proj(base.ll_x, base.ll_y, inverse=True)
     base.lr_lon, base.lr_lat = proj(base.lr_x, base.lr_y, inverse=True)
@@ -144,7 +144,7 @@ def main(args):
     #      default for numpy, and flip the dimensions. SCRIP will then read in the array structure
     #      correctly, and the expected ordering within the netCDF file we are creating will be 
     #      maintained.
-    scrip.dims[:] = numpy.array(base.dims)[::-1]
+    #scrip.dims[:] = numpy.array(base.dims)[::-1]
     #NOTE: Now dumping everything 'F-style' (column-major) order. 
     scrip.dims[:] = numpy.array(base.dims)[::]
 
@@ -153,11 +153,11 @@ def main(args):
     scrip.imask.units = 'unitless'
 
     scrip.center_lat = nc_scrip.createVariable('grid_center_lat','f4', ('grid_size'))
-    scrip.center_lat[:] = base.lat_grid[:,:].flatten(order='F')
+    scrip.center_lat[:] = base.lat_grid[:,:].flatten(order='C')
     scrip.center_lat.setncattr('units', 'degrees')
 
     scrip.center_lon = nc_scrip.createVariable('grid_center_lon','f4', ('grid_size'))
-    scrip.center_lon[:] = base.lon_grid[:,:].flatten(order='F')
+    scrip.center_lon[:] = base.lon_grid[:,:].flatten(order='C')
     scrip.center_lon.setncattr('units', 'degrees')
 
     scrip.corner_lat = nc_scrip.createVariable('grid_corner_lat','f4', ('grid_size','grid_corners',))

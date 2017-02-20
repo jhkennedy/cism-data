@@ -26,7 +26,7 @@ class rt():
         self.now = time.time()
         print("-"*80)
         print("Total elapsed time: "+str(self.now - self.start))
-        print(" Time since last log: "+str(self.now - self.last)
+        print(" Time since last log: "+str(self.now - self.last))
         print("-"*80)
         self.last = self.now
 
@@ -86,7 +86,7 @@ speak.verbose(args,"   Found InSAR data")
 
 insar_grid = ESMF.Grid(filename=os.path.join(os.getcwd(),epsg_InSAR), filetype=ESMF.FileFormat.SCRIP)
 insar_field = ESMF.Field(insar_grid, staggerloc=ESMF.StaggerLoc.CENTER)
-insar_field.data[:,:] = nc_insar.variables['vx'][:,:].T 
+insar_field.data[:,:] = nc_insar.variables['vx'][:,:] 
 
 cism_grid = ESMF.Grid(filename=os.path.join(os.getcwd(),epsg_scrip), filetype=ESMF.FileFormat.SCRIP)
 cism_field = ESMF.Field(cism_grid, staggerloc=ESMF.StaggerLoc.CENTER)
