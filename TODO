@@ -2,14 +2,6 @@ build_EPSG3413_greenland.py
     Still need fields:
         landcover
         mask
-        projection information (cf compliant)
-    Fix:
-        rectbivariatespline uses missing values in interp. Need to mask out bad values after interp somehow... (use max and mins?)
-            seems to work in icebridge, but not well in insar...
-            Also, extend to all other Rec code 
-        Conservative interpolation?
-            RACMO
-            bed?
 
 
 bild_Bamber_greenland.py
@@ -19,16 +11,22 @@ bild_Bamber_greenland.py
         lon
         landcover
         mask
-        projection information (cf compliant)
+        projection information
+        CF-compliance
 
 scrip_grid.py
     make entirely independent
-    option to pick projection
+
 
 build_*
     Remove redundant:
         add_time(), coarsen() in data/bamberdem.py and data/epsg3413.py can be combined and placed in util (they aren't grid specific).
     combine
+    Fix:
+        Conservative interpolation?
+            RACMO
+            bed?
+
 
 All:
     fix all FIXMEs
@@ -36,8 +34,8 @@ All:
     clean up the python
     PEP8 conformance
     numpy vs as np
-    in status bars, switch ctr / to integer division //
-
+    use bar script from my process gist to make the status bars 
+    complicated prints to "".format()
 
 Document:
     All functions

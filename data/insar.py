@@ -92,8 +92,6 @@ def velocity_epsg3413(args, nc_insar, nc_base, base):
         insar_data = np.ma.masked_values(nc_insar.variables[var][:,:], -2.e9)
         data_min = insar_data.min() 
         data_max = insar_data.max() 
-        print('\nInSAR Max: '+str(data_max))
-        print(  'InSAR Min: '+str(data_min))
 
         insar_to_base = scipy.interpolate.RectBivariateSpline( insar.y[:], insar.x[:], insar_data, kx=1, ky=1, s=0) # regular 2d linear interp. but faster
         base_data = np.zeros( base.dims )

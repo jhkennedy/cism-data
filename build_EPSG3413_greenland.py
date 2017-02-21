@@ -24,8 +24,7 @@ def abs_existing_file(file):
 #==== Data Locations ====
 # Link data here or edit 
 #========================
-lc_epsg     = 'data/EPSG3413/EPSG3413grid.json'        #NOTE: created by plot_projections.py
-lc_epsg_shr = 'data/EPSG3413/EPSG3413grid_shrunk.json' #NOTE: created by plot_grids.py
+lc_epsg     = 'data/EPSG3413/EPSG3413grid.json'        #NOTE: created by plot_grids.py
 lc_bamber   = 'data/BamberDEM/Greenland_bedrock_topography_V3.nc'
 lc_seaRise  = 'data/SeaRise/Greenland1km.nc'
 lc_racmo2p0 = 'data/RACMO2.0/Racmo2MeanSMB_1961-1990.nc'
@@ -46,7 +45,10 @@ f_template = 'greenland.epsg3413.config'
 # parse the command line arguments
 parser = argparse.ArgumentParser()   # -h or --help automatically included!
 
-parser.add_argument('-e', '--extended', help='Produce the extended grid.', action='store_true')
+parser.add_argument('-s', '--shrink', 
+        type=abs_existing_file,
+        default='data/EPSG3413/EPSG3413grid_shrunk.json',
+        help='JSON description of the shrunken grid specs. Use plot_grids.py to create this file.')
 
 volume = parser.add_mutually_exclusive_group()
 volume.add_argument("-v", "--verbose", help="Increase the output verbosity", action="store_true")
@@ -63,7 +65,7 @@ speak.notquiet(args,"Loading the datasets.")
 from data import epsg3413
 f_epsg = abs_existing_file(lc_epsg)
 speak.verbose(args,"   Found EPSG:3413 grid specs")
-f_epsg_shr = abs_existing_file(lc_epsg_shr)
+f_epsg_shr = args.shrink
 speak.verbose(args,"   Found shrunken EPSG:3413 grid specs")
 
 from data import bamberdem
