@@ -227,25 +227,25 @@ climo.x0[:] = base.x0[:]
 climo.lon_grid = nc_climo.createVariable('lon', 'f4', ('time','y1','x1',))
 climo.lon_grid.units = 'degrees'
 climo.lon_grid.long_name = 'grid center longitude'
-climo.lon_grid.note = 'Created by Joseph H. Kennedy using pyproj.'
+climo.lon_grid.source = 'Joseph H. Kennedy, ORNL'
 climo.lon_grid[0,:,:] = base.lon_grid[:,:]
 
 climo.lat_grid = nc_climo.createVariable('lat', 'f4', ('time','y1','x1',))
 climo.lat_grid.units = 'degrees'
 climo.lat_grid.lat_name = 'grid center latitude'
-climo.lat_grid.note = 'Created by Joseph H. Kennedy using pyproj.'
+climo.lat_grid.source = 'Joseph H. Kennedy, ORNL'
 climo.lat_grid[0,:,:] = base.lat_grid[:,:]
 
 climo.lon0_grid = nc_climo.createVariable('lon0', 'f4', ('time','y0','x0',))
 climo.lon0_grid.units = 'degrees'
 climo.lon0_grid.long_name = 'grid center longitude, velocity grid'
-climo.lon0_grid.note = 'Created by Joseph H. Kennedy using pyproj.'
+climo.lon0_grid.source = 'Joseph H. Kennedy, ORNL'
 climo.lon0_grid[0,:,:] = base.lon0_grid[:,:]
 
 climo.lat0_grid = nc_climo.createVariable('lat0', 'f4', ('time','y0','x0',))
 climo.lat0_grid.units = 'degrees'
 climo.lat0_grid.lat_name = 'grid center latitude, velocity grid'
-climo.lat0_grid.note = 'Created by Joseph H. Kennedy using pyproj.'
+climo.lat0_grid.source = 'Joseph H. Kennedy, ORNL'
 climo.lat0_grid[0,:,:] = base.lat0_grid[:,:]
 
 climo.area = nc_climo.createVariable('area','f4', ('time','y1','x1',))

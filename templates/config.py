@@ -50,16 +50,18 @@ def write(f_in, f_template, base, km):
         Grid resolution in kilometers.
     """
     
-    in_split = os.path.splitext(f_in)
-    f_out = in_split[0]+'.out'+in_split[1]
+    in_bpath, in_bfile = os.path.split(f_in)
+    in_bname, in_bext = os.path.splitext(in_bfile)
+    
+    f_out = os.path.join(in_bpath, in_bname+'.out'+in_bext)
 
     config_dict = replace_dict(base.ny, base.nx, km*1000, km*1000, f_in, f_out, str(km)+' km' )
 
-    base_config = open('templates/'+f_template,'r')
+    base_config = open(f_template,'r')
     
-    t_split = f_template.split('.') 
+    t_split = os.path.basename(f_template).split('.') 
 
-    f_config = 'complete/'+t_split[0]+'_'+str(km)+'km.'+'.'.join(t_split[1:])
+    f_config = os.path.join(in_bpath, t_split[0]+'_'+str(km)+'km.'+'.'.join(t_split[1:]))
     #NOTE: should make something like: complete/greenland_1km.mcb.config
 
     out_config  = open(f_config,'w')

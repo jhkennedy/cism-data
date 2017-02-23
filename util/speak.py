@@ -8,6 +8,9 @@ Functions list:
     * verbose( args, words )
 """
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+import sys
 
 def notquiet( args, words ) :
     """Print statment if no quiet option set.
@@ -57,3 +60,13 @@ def verbose( args, words ) :
     """
     if args.verbose :
         print( words )
+
+def progress(args, now, last, width=60, char='=', indent=4):
+    if not args.quiet :
+        if now == last:
+            sys.stdout.write('\r'+' '*indent+'[{line:{length}}] {percent:3.0f}%\n'.format(
+                line=char*width, percent=100., length=width))
+        else:
+            sys.stdout.write('\r'+' '*indent+'[{line:{length}}] {percent:3.0f}%'.format(
+                line=char*((now*width)//last), percent=now/last*100., length=width))
+        sys.stdout.flush()

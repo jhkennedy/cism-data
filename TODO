@@ -1,8 +1,6 @@
 build_EPSG3413_greenland.py
-    Still need fields:
-        landcover
-        mask
-
+    rework interpolation of icebridge data... slow. May have to hand code linear interp
+    encorporate more data to fill missing corners
 
 bild_Bamber_greenland.py
     Remove CKTree as it's incredibly slow
@@ -36,6 +34,8 @@ All:
     numpy vs as np
     use bar script from my process gist to make the status bars 
     complicated prints to "".format()
+    parallelize
+        move all base netCDF opperation to single module for parallelization
 
 Document:
     All functions

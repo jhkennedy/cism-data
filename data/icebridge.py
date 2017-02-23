@@ -43,6 +43,7 @@ import sys
 import scipy
 import pyproj
 import numpy as np
+from shapely.geometry import Point, shape 
 
 from util import speak
 from util.ncfunc import copy_atts, copy_atts_bad_fill, copy_atts_add_fill
@@ -98,6 +99,7 @@ def mcb_epsg3413(args, nc_massCon, nc_bamber, nc_base, base, proj_epsg3413, proj
     speak.verbose(args,"      Primary Data [IceBridge]:  bed and errbed.")
     speak.verbose(args,"      Secondary Data [BamberDEM]:  BedrockElevation and BedrockError.")
 
+    #base_vars = {'topg':['bed','BedrockElevation']} #NOTE: topgerr accounts for ~10 min. of the runtime.
     base_vars = {'topg':['bed','BedrockElevation'],
                  'topgerr':['errbed', 'BedrockError']}
     for var, var_list in base_vars.iteritems():
@@ -165,6 +167,22 @@ def mcb_epsg3413(args, nc_massCon, nc_bamber, nc_base, base, proj_epsg3413, proj
         base_mcb_masked = np.ma.masked_array(base_mcb, mask=np.logical_or(base_y_mask.mask,base_x_mask.mask))
 
         base_bamber[~base_mcb_masked.mask] = base_mcb_masked[~base_mcb_masked.mask]
+
+        bamx = [bamber.x[0], bamber.x[-1], bamber.x[-1], bamber.x[0], bamber.x[0]]
+        bamy = [bamber.y[0], bamber.y[0], bamber.y[-1], bamber.y[-1], bamber.y[0]]
+        bam_shape = shape({'type':'polygon', 'coordinates':[zip(bamx,bamy)]})
+        base_pts_in_bamber = zip(base2bamber.x_grid.flatten(), base2bamber.y_grid.flatten())
+        msk = np.ones(base2bamber.x_grid.size, dtype=bool)
+        for ii in range(msk.size):
+            msk[ii] = Point(base_pts_in_bamber[ii]).within(bam_shape)
+        msk.shape = base2bamber.x_grid.shape
+
+        #from pprint import pprint as pp
+        #print(msk.size)
+        #pp(msk)
+
+        base_bamber[~msk] = -9999.
+
 
         #NOTE: Make sure all values fall within a reasonable range as 
         #      RectBivariateSpine interps using the missing values

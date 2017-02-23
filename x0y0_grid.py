@@ -93,13 +93,13 @@ grid0.x0[:] = base.x0[:]
 grid0.lon0_grid = nc_grid0.createVariable('lon0', 'f4', ('time','y0','x0',))
 grid0.lon0_grid.units = 'degrees'
 grid0.lon0_grid.long_name = 'grid center longitude, velocity grid'
-grid0.lon0_grid.note = 'Created by Joseph H. Kennedy using pyproj.'
+grid0.lon0_grid.source = 'Joseph H. Kennedy, ORNL'
 grid0.lon0_grid[0,:,:] = base.lon0_grid[:,:]
 
 grid0.lat0_grid = nc_grid0.createVariable('lat0', 'f4', ('time','y0','x0',))
 grid0.lat0_grid.units = 'degrees'
 grid0.lat0_grid.lat_name = 'grid center latitude, velocity grid'
-grid0.lat0_grid.note = 'Created by Joseph H. Kennedy using pyproj.'
+grid0.lat0_grid.source = 'Joseph H. Kennedy, ORNL'
 grid0.lat0_grid[0,:,:] = base.lat0_grid[:,:]
 
 nc_base.close()

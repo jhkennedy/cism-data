@@ -43,14 +43,14 @@ def grid_center_latlons(nc_base, base, proj):
     base.lon_grid.standard_name = 'longitude'
     base.lon_grid.units = 'degrees_east'
     base.lon_grid.grid_mapping = 'epsg_3413'
-    base.lon_grid.note = 'Created by Joseph H. Kennedy using pyproj'
+    base.lon_grid.source = 'Joseph H. Kennedy, ORNL'
 
     base.lat_grid = nc_base.createVariable('lat', 'f4', ('y','x',))
     base.lat_grid.long_name = 'grid center latitude'
     base.lat_grid.standard_name = 'latitude'
     base.lat_grid.units = 'degrees_north'
     base.lat_grid.grid_mapping = 'epsg_3413'
-    base.lat_grid.note = 'Created by Joseph H. Kennedy using pyproj'
+    base.lat_grid.source = 'Joseph H. Kennedy, ORNL'
 
     lon_grid, lat_grid = proj(base.x_grid.ravel(), base.y_grid.ravel(), inverse=True)
     lon_grid.shape = base.x_grid.shape 
