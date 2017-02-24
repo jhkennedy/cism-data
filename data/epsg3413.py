@@ -47,7 +47,7 @@ def build_base(f_base, f_epsg, d_meters):
     base.proj.latitude_of_projection_origin = '+90' 
     base.proj.straight_vertical_longitude_from_pole = '-45' 
     base.proj.standard_parallel = '70' 
-    base.proj.scale_factor = '1' 
+    base.proj.proj_scale_factor = '1' 
     base.proj.false_easting = '0' 
     base.proj.false_northing = '0' 
     base.proj.ellipsoid = 'WGS84' 
