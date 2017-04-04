@@ -27,6 +27,11 @@ parser.add_argument('-i', '--input',
         type=abs_existing_file,
         help='netCDF dataset to build a (lat0,lon0) grid from the (y0,x0) grid.')
 
+parser.add_argument('-p', '--projection',
+        default='epsg', type=str.lower,
+        choices=['epsg','bamber'],
+        help='The projection of the NetCDF dataset.')
+
 volume = parser.add_mutually_exclusive_group()
 volume.add_argument("-v", "--verbose", help="Increase the output verbosity", action="store_true")
 volume.add_argument("-q", "--quiet",   help="Run silently",                  action="store_true")
@@ -35,6 +40,13 @@ args = parser.parse_args()
 
 # get the projections
 proj_epsg3413, proj_eigen_gl04c = projections.greenland()
+#FIXME: Pick projection based on input file!
+if args.projection == 'epsg':
+    proj = proj_epsg3413
+    scrip_title = "CISM EPSG:3413 Grid"
+elif args.projection == 'bamber':
+    proj = proj_eigen_gl04c
+    scrip_title = "CISM Bamber Grid"
 
 # load the dataset
 nc_base = Dataset(args.input, 'r')
@@ -52,8 +64,7 @@ base.x0 = (base.x[:-1] + base.x[1:])/2.
 base.y0_grid, base.x0_grid = scipy.meshgrid(base.y0[:], base.x0[:], indexing='ij')
 base.dim0 = (base.ny-1, base.nx-1)
 
-#FIXME: Pick projection based on input file!
-lon0_grid, lat0_grid = proj_eigen_gl04c(base.x0_grid.ravel(), base.y0_grid.ravel(), inverse=True)
+lon0_grid, lat0_grid = proj(base.x0_grid.ravel(), base.y0_grid.ravel(), inverse=True)
 lon0_grid.shape = base.x0_grid.shape 
 lat0_grid.shape = base.x0_grid.shape
 
