@@ -1,0 +1,22 @@
+I'm running into trouble making mapping files with the new SCRIP grid file: The ESMF tool reports:
+ 
+20170405 085058.094 INFO     PET0 Running with ESMF Version 6.1.1
+20170405 085058.325 ERROR    PET0 ESMF_Grid.F90:4955 ESMF_GridCreate Wrong argument specified - - Bad corner array in SCRIP file
+20170405 085058.325 ERROR    PET0 ESMF_Grid.F90:5782 ESMF_GridCreateFrmScrip Wrong argument specified - Internal subroutine call returned Error
+20170405 085058.326 ERROR    PET0 ESMF_Grid.F90:5470 ESMF_GridCreateFrmNCFile Wrong argument specified - Internal subroutine call returned Error
+20170405 085058.326 ERROR    PET0 ESMF_RegridWeightGen.F90:844 ESMF_RegridWeightGen Wrong argument specified - Internal subroutine call returned Error
+ 
+Here's the simplest test case:
+ 
+(1) Create a script that maps the new grid onto itself, like this: [scrip.sh]
+ 
+(2) Put this in a checkout of cime on yellowstone (you can clone the latest master fromhttps://github.com/ESMCI/cime), in cime/tools/mapping/gen_mapping_files/gen_ESMF_mapping_file . Call the new file regrid_cism.sh
+ 
+(3) Run
+ 
+bsub < regrid_cism.sh
+ 
+(4) After a couple of minutes, you should see output files ? including files like PET*.RegridWeightGen.Log that contain the above error message.
+ 
+ 
+I'm not sure what's wrong here, but I assume there's something wrong with the scrip grid file you created. I tried the above procedure mapping the older (late December) grid to itself and it worked (see commented-out filesrc above - also change filedst to point to that same file).
