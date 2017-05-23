@@ -68,7 +68,6 @@ base.make_grid()
 
 speak.notquiet(args,"   Done!")
 
-
 #==== Projections ====
 # All the projections 
 # needed for the data 
@@ -85,8 +84,8 @@ speak.notquiet(args,"   Done!")
 #=================================
 speak.notquiet(args, "\nProject the Bamber template grid into EPSG:3413.")
 
-T_ll = ( np.amin(template.x_grid[1,:]), np.amin(template.y_grid[1,:]) )
-T_lr = ( np.amax(template.x_grid[1,:]), np.amax(template.y_grid[1,:]) )
+T_ll = ( np.amin(template.x_grid[0,:]), np.amin(template.y_grid[0,:]) )
+T_lr = ( np.amax(template.x_grid[0,:]), np.amax(template.y_grid[0,:]) )
 T_ur = ( np.amax(template.x_grid[-1,:]), np.amax(template.y_grid[-1,:]) )
 T_ul = ( np.amin(template.x_grid[-1,:]), np.amin(template.y_grid[-1,:]) )
 
@@ -108,17 +107,32 @@ TE_ys = np.array([e_ll[1], e_ll[1], e_ur[1], e_ur[1], e_ll[1]])
 
 TE_lons, TE_lats = proj_epsg3413(TE_xs, TE_ys, inverse=True)
 
+#=====================================================
+# Write the Bamber template grid specs to a json file 
+#=====================================================
+T_grid = {'ll': list(T_ll),
+          'ur': list(T_ur),
+          'xs':T_xs.tolist(),
+          'ys':T_ys.tolist(),
+          'lons': T_lons.tolist(),
+          'lats': T_lats.tolist(),
+          'projstring': projections.proj_string(proj_eigen_gl04c) 
+         }
 
-#==============================================
-# Write the template grid specs to a json file 
-#==============================================
+with open('Bambergrid.json', 'w') as f:
+    json.dump(T_grid, f, indent=2)
+
+
+#===================================================
+# Write the EPSG template grid specs to a json file 
+#===================================================
 TE_grid = {'ll':[TE_xs[0], TE_ys[0]],
           'ur':[TE_xs[2], TE_ys[2]],
           'xs':TE_xs.tolist(),
           'ys':TE_ys.tolist(),
           'lons': TE_lons.tolist(),
           'lats': TE_lats.tolist(),
-          'projstring':'+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +units=m'
+          'projstring': projections.proj_string(proj_epsg3413)
          }
 
 with open('EPSG3413grid.json', 'w') as f:
@@ -129,8 +143,8 @@ with open('EPSG3413grid.json', 'w') as f:
 #=================================
 speak.notquiet(args, "\nProject the Bamber grid into EPSG:3413.")
 
-B_ll = ( np.amin(base.x_grid[1,:]), np.amin(base.y_grid[1,:]) )
-B_lr = ( np.amax(base.x_grid[1,:]), np.amax(base.y_grid[1,:]) )
+B_ll = ( np.amin(base.x_grid[0,:]), np.amin(base.y_grid[0,:]) )
+B_lr = ( np.amax(base.x_grid[0,:]), np.amax(base.y_grid[0,:]) )
 B_ur = ( np.amax(base.x_grid[-1,:]), np.amax(base.y_grid[-1,:]) )
 B_ul = ( np.amin(base.x_grid[-1,:]), np.amin(base.y_grid[-1,:]) )
 
@@ -162,7 +176,7 @@ E_ys = np.array([e_ll[1], e_ll[1], e_ur[1], e_ur[1], e_ll[1]])
 E_lons, E_lats = proj_epsg3413(E_xs, E_ys, inverse=True)
 
 #NOTE: Best normal grid
-offset_y128 = -20000.0
+offset_y128 = -19000.0
 #NOTE: Working extended grid
 #offset_y128 = -101000.0
 #NOTE: Idea extended grid
@@ -181,8 +195,8 @@ offset_x128 =-48000.0
 
 O_ys = np.array([e_ll[1]+offset_y128, 
                  e_ll[1]+offset_y128, 
-                 e_ur[1]-offset_y128-1000., 
-                 e_ur[1]-offset_y128-1000., 
+                 e_ur[1]-offset_y128, 
+                 e_ur[1]-offset_y128, 
                  e_ll[1]+offset_y128])
 O_xs = np.array([e_ll[0]+offset_xl+offset_x128, 
                  e_ur[0]-offset_x128-1000., 
@@ -218,16 +232,32 @@ speak.notquiet(args,  "      Number of km needed to (add, subtract) to y: "+str(
 speak.notquiet(args,  "      Number of km needed to (add, subtract) to x: "+str(128 - (grid_points_x % 128))+', '+str(grid_points_x % 128))
 
 
-#=====================================
-# Write the grid specs to a json file 
-#=====================================
+#=====================================================
+# Write the shrunken Bamber grid specs to a json file 
+#=====================================================
+B_grid = {'ll': list(B_ll),
+          'ur': list(B_ur),
+          'xs':B_xs.tolist(),
+          'ys':B_ys.tolist(),
+          'lons': B_lons.tolist(),
+          'lats': B_lats.tolist(),
+          'projstring': projections.proj_string(proj_eigen_gl04c) 
+         }
+
+with open('Bambergrid_shrunk.json', 'w') as f:
+    json.dump(B_grid, f, indent=2)
+
+
+#===================================================
+# Write the shrunken EPSG grid specs to a json file 
+#===================================================
 O_grid = {'ll':[O_xs[0], O_ys[0]],
           'ur':[O_xs[2], O_ys[2]],
           'xs':O_xs.tolist(),
           'ys':O_ys.tolist(),
           'lons': O_lons.tolist(),
           'lats': O_lats.tolist(),
-          'projstring':'+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +units=m'
+          'projstring': projections.proj_string(proj_epsg3413)
          }
 
 with open('EPSG3413grid_shrunk.json', 'w') as f:
