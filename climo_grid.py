@@ -3,9 +3,9 @@
 import os
 import sys
 import math
-import numpy
 import scipy
 import argparse
+import numpy as np
 
 from netCDF4 import Dataset
 from shapely.geometry import shape 
@@ -83,21 +83,21 @@ base.lr_lon, base.lr_lat = proj_eigen_gl04c(base.lr_x, base.lr_y, inverse=True)
 base.ur_lon, base.ur_lat = proj_eigen_gl04c(base.ur_x, base.ur_y, inverse=True)
 base.ul_lon, base.ul_lat = proj_eigen_gl04c(base.ul_x, base.ul_y, inverse=True)
 
-base.corner_lat = numpy.column_stack((base.ll_lat, base.lr_lat, base.ur_lat, base.ul_lat))
-base.corner_lon = numpy.column_stack((base.ll_lon, base.lr_lon, base.ur_lon, base.ul_lon))
+base.corner_lat = np.column_stack((base.ll_lat, base.lr_lat, base.ur_lat, base.ul_lat))
+base.corner_lon = np.column_stack((base.ll_lon, base.lr_lon, base.ur_lon, base.ul_lon))
 
-min_lat = numpy.amin(base.corner_lat)
-max_lat = numpy.amax(base.corner_lat)
+min_lat = np.amin(base.corner_lat)
+max_lat = np.amax(base.corner_lat)
 
-min_lon = numpy.amin(base.corner_lon)
-max_lon = numpy.amax(base.corner_lon)
+min_lon = np.amin(base.corner_lon)
+max_lon = np.amax(base.corner_lon)
 
 proj_aea = projections.equal_area(min_lat, max_lat, (max_lon+min_lon)/2.)
 
 # get the area for each grid cell
 sys.stdout.write("   [%-60s] %d%%" % ('='*0, 0.))
 sys.stdout.flush()
-base.area = numpy.zeros(base.N)
+base.area = np.zeros(base.N)
 for ii in range(base.N):
     ctr = (ii*60)/base.N
     if not (ii % 100): 
@@ -149,21 +149,21 @@ base.lr_lon0, base.lr_lat0 = proj_eigen_gl04c(base.lr_x0, base.lr_y0, inverse=Tr
 base.ur_lon0, base.ur_lat0 = proj_eigen_gl04c(base.ur_x0, base.ur_y0, inverse=True)
 base.ul_lon0, base.ul_lat0 = proj_eigen_gl04c(base.ul_x0, base.ul_y0, inverse=True)
 
-base.corner_lat0 = numpy.column_stack((base.ll_lat0, base.lr_lat0, base.ur_lat0, base.ul_lat0))
-base.corner_lon0 = numpy.column_stack((base.ll_lon0, base.lr_lon0, base.ur_lon0, base.ul_lon0))
+base.corner_lat0 = np.column_stack((base.ll_lat0, base.lr_lat0, base.ur_lat0, base.ul_lat0))
+base.corner_lon0 = np.column_stack((base.ll_lon0, base.lr_lon0, base.ur_lon0, base.ul_lon0))
 
-min_lat0 = numpy.amin(base.corner_lat0)
-max_lat0 = numpy.amax(base.corner_lat0)
+min_lat0 = np.amin(base.corner_lat0)
+max_lat0 = np.amax(base.corner_lat0)
 
-min_lon0 = numpy.amin(base.corner_lon0)
-max_lon0 = numpy.amax(base.corner_lon0)
+min_lon0 = np.amin(base.corner_lon0)
+max_lon0 = np.amax(base.corner_lon0)
 
 proj_aea0 = projections.equal_area(min_lat0, max_lat0, (max_lon0+min_lon0)/2.)
 
 # get the area for each grid cell
 sys.stdout.write("   [%-60s] %d%%" % ('='*0, 0.))
 sys.stdout.flush()
-base.area0 = numpy.zeros(base.N0)
+base.area0 = np.zeros(base.N0)
 for ii in range(base.N0):
     ctr = (ii*60)/base.N0
     if not (ii % 100): 

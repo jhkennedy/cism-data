@@ -3,8 +3,8 @@
 import os
 import sys
 import math
-import numpy
 import argparse
+import numpy as np
 
 from netCDF4 import Dataset
 from shapely.geometry import shape
@@ -95,21 +95,21 @@ def main(args):
     base.ur_lon, base.ur_lat = proj(base.ur_x, base.ur_y, inverse=True)
     base.ul_lon, base.ul_lat = proj(base.ul_x, base.ul_y, inverse=True)
 
-    base.corner_lat = numpy.column_stack((base.ll_lat, base.lr_lat, base.ur_lat, base.ul_lat))
-    base.corner_lon = numpy.column_stack((base.ll_lon, base.lr_lon, base.ur_lon, base.ul_lon))
+    base.corner_lat = np.column_stack((base.ll_lat, base.lr_lat, base.ur_lat, base.ul_lat))
+    base.corner_lon = np.column_stack((base.ll_lon, base.lr_lon, base.ur_lon, base.ul_lon))
 
-    min_lat = numpy.amin(base.corner_lat)
-    max_lat = numpy.amax(base.corner_lat)
+    min_lat = np.amin(base.corner_lat)
+    max_lat = np.amax(base.corner_lat)
 
-    min_lon = numpy.amin(base.corner_lon)
-    max_lon = numpy.amax(base.corner_lon)
+    min_lon = np.amin(base.corner_lon)
+    max_lon = np.amax(base.corner_lon)
 
     proj_aea = projections.equal_area(min_lat, max_lat, (max_lon+min_lon)/2.)
 
     # get the area for each grid cell
     sys.stdout.write("   [%-60s] %d%%" % ('='*0, 0.))
     sys.stdout.flush()
-    base.area = numpy.zeros(base.N)
+    base.area = np.zeros(base.N)
     for ii in range(base.N):
         ctr = (ii*60)/base.N
         if not (ii % 100):
@@ -143,19 +143,19 @@ def main(args):
     #       default for numpy, and flip the dimensions. SCRIP will then read in the array structure
     #       correctly, and the expected ordering within the netCDF file we are creating will be
     #       maintained. THIS WORKS. But it's stupid.
-    scrip.dims[:] = numpy.array(base.dims)[::-1]
+    scrip.dims[:] = np.array(base.dims)[::-1]
     scrip.dims.note = 'The grid dims are flipped (from how they appear in input dataset) because ' + \
                       'SCRIP assumes F-style, column-major order in this file, but input datasets ' + \
                       '(and netCDF) use C-style, row-major ordering.'
     # NOTE: Alternatively, you can dumping everything 'F-style' (column-major) order, and preserve
     #       the dimensions. To switch to F-style, substitute all order='C' for order='F' and
     #       uncomment the line below (commenting out the lines above).
-    # scrip.dims[:] = numpy.array(base.dims)[:]
+    # scrip.dims[:] = np.array(base.dims)[:]
     # NOTE: It would also be prudent to note that data was dumped in the F-style format, so that can 
     #       be accounted for when reading in this data.
 
     scrip.imask = nc_scrip.createVariable('grid_imask', 'i4', ('grid_size'))
-    scrip.imask[:] = numpy.ones(base.N)
+    scrip.imask[:] = np.ones(base.N)
     scrip.imask.units = 'unitless'
 
     scrip.center_lat = nc_scrip.createVariable('grid_center_lat', 'f4', ('grid_size'))
