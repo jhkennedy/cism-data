@@ -7,6 +7,7 @@ import subprocess
 import argparse
 
 from util import speak
+from util import finalize
 from util import projections
 from util.ncfunc import get_nc_file
 
@@ -207,7 +208,7 @@ if not args.use_template:
 # shrink to size around ice sheet 
 #=================================
 speak.notquiet(args,'\nAdding the time dimension and creating the 1km dataset.')
-epsg3413.add_time(args, f_base, f_1km, f_template, f_epsg_shr)
+finalize.add_time_and_shrink(args, 'epsg_3413', f_base, f_1km, f_template, f_epsg_shr)
 
 #==== Coarsen ==== 
 # make 2, 4 and 8  
@@ -215,7 +216,7 @@ epsg3413.add_time(args, f_base, f_1km, f_template, f_epsg_shr)
 #==================
 speak.notquiet(args,'\nCreating coarser datasets.')
 coarse_list = [2,4,5,8]   # in km
-bamberdem.coarsen(args, f_1km, f_template, coarse_list)
+finalize.coarsen(args, 'epsg_3413', f_1km, f_template, coarse_list)
 
 #==== and done! ====
 #===================

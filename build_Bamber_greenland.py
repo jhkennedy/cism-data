@@ -6,6 +6,7 @@ import subprocess
 import argparse
 
 from util import speak
+from util import finalize
 from util import projections
 from util.ncfunc import get_nc_file
 
@@ -167,7 +168,7 @@ speak.notquiet(args,"\nAdding the time dimension and creating the 1km dataset.")
 f_1km      = 'complete/greenland_1km_'+stamp+'.mcb.nc'
 f_template = 'greenland.mcb.config'
 
-bamberdem.add_time(args, f_base, f_1km, f_template)
+finalize.add_time_and_shrink(args, 'bamber', f_base, f_1km, f_template)
 
 #==== Coarsen ==== 
 # make 2, 4 and 8  
@@ -177,7 +178,7 @@ speak.notquiet(args,"\nCreating coarser datasets.")
 
 coarse_list = [2,4,5,8]   # in km
 
-bamberdem.coarsen(args, f_1km, f_template, coarse_list)
+finalize.coarsen(args, 'bamber', f_1km, f_template, coarse_list)
 
 #==== and done! ====
 #===================

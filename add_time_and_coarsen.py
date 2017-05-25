@@ -6,6 +6,7 @@ import datetime
 import argparse
 
 from util import speak
+from util import finalize
 
 def abs_existing_file(file):
     file = os.path.abspath(file)
@@ -32,7 +33,7 @@ args = parser.parse_args()
 stamp = datetime.date.today().strftime("%Y_%m_%d")
 f_base     = 'templates/greenland_1km.epsg3413.nc'
 f_1km      = 'complete/greenland_1km_'+stamp+'.epsg3413.nc'
-f_template = 'greenland.epsg3413.config'
+f_template = 'templates/greenland.epsg3413.config'
 
 from data import epsg3413
 lc_epsg_shr = 'data/EPSG3413/EPSG3413grid_shrunk.json' #NOTE: created by plot_grids.py
@@ -45,7 +46,7 @@ from data import bamberdem
 # shrink to size around ice sheet 
 #=================================
 speak.notquiet(args,"\nAdding the time dimension and creating the 1km dataset.")
-epsg3413.add_time(args, f_base, f_1km, f_template, f_epsg_shr)
+finalize.add_time_and_shrink(args, 'epsg_3413', f_base, f_1km, f_template, f_epsg_shr)
 
 #==== Coarsen ==== 
 # make 2, 4 and 8  
@@ -53,6 +54,6 @@ epsg3413.add_time(args, f_base, f_1km, f_template, f_epsg_shr)
 #==================
 speak.notquiet(args,"\nCreating coarser datasets.")
 coarse_list = [2,4,5,8]   # in km
-bamberdem.coarsen(args, f_1km, f_template, coarse_list)
+finalize.coarsen(args, 'epsg_3413', f_1km, f_template, coarse_list)
 
 
