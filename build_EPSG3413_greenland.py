@@ -18,10 +18,11 @@ from util import custom_argparse_types as cats
 #==== Data Locations ====
 # Link data here or edit 
 #========================
+#FIXME: Centralize data location vars so users only have to edit this info once
 lc_epsg     = 'data/EPSG3413/EPSG3413grid.json'        #NOTE: created by plot_grids.py
 lc_bamber   = 'data/BamberDEM/Greenland_bedrock_topography_V3.nc'
 lc_seaRise  = 'data/SeaRise/Greenland1km.nc'
-lc_racmo2p0 = 'data/RACMO2.0/Racmo2MeanSMB_1961-1990.nc'
+lc_racmo2p3 = 'data/RACMO2.3/smb_1km_GrIS_downscaled_RACMO2_3.nc'
 lc_InSAR    = 'data/InSAR/Joughin2015/greenland_vel_mosaic500.nc' #NOTE:  will build this file from mosaicOffsets.* files
 lc_massCon  = 'data/IceBridge/Greenland/MCdataset-2014-11-19.nc'
 lc_mask     = 'data/Ice2Sea/ice2sea_Greenland_geometry_icesheet_mask_Zurich.nc'
@@ -81,9 +82,9 @@ if not args.use_template:
     nc_seaRise = get_nc_file(lc_seaRise,'r')
     speak.verbose(args,'   Found Sea Rise data')
 
-    from data import racmo2p0
-    nc_racmo2p0 = get_nc_file(lc_racmo2p0,'r')
-    speak.verbose(args,'   Found RACMO 2.0 data')
+    from data import racmo2p3
+    nc_racmo2p3 = get_nc_file(lc_racmo2p3,'r')
+    speak.verbose(args,'   Found RACMO 2.3 data')
 
     from data import insar
     try:
@@ -136,13 +137,13 @@ if not args.use_template:
     speak.notquiet(args,'   Done!')
     nc_seaRise.close()
 
-    #==== RACMO2.0 Data =====
+    #==== RACMO2.3 Data =====
     # this is a 1km dataset  
     #========================
     speak.notquiet(args,'\nGetting acab from the RACMO 2.0 data.')
-    racmo2p0.acab_epsg3413(args, nc_racmo2p0, nc_bamber, nc_base, base, proj_epsg3413, proj_eigen_gl04c)
+    racmo2p3.acab_epsg3413(args, nc_racmo2p3, nc_base, base)
     speak.notquiet(args,'   Done!')
-    nc_racmo2p0.close()
+    nc_racmo2p3.close()
 
     #==== InSAR velocity Data ====
     # this is a 500m dataset in   
