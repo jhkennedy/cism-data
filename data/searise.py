@@ -14,7 +14,7 @@ can be found at:
 
 http://websrv.cs.umt.edu/isis/index.php/1km_Greenland_data_set
 
-The data uses the same projection as the Bamber DEM:
+The data uses the Bamber DEM projection:
     * Polar stereographic
     * WGS84 ellipsoid
     * Standard parallel = 71 degrees

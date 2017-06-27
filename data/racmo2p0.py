@@ -1,14 +1,20 @@
 """
 data.racmo2p0 : RACMO 2.0 data import module.
 
+WARNING: THIS DATASET IS SHIFTED SOUTH RELATIVE TO GREENLAND. DO NOT USE.
+
+
 This module provides functions to import data from the RACMO 2.0 
 dataset into a CISM dataset. 
 
 Functions list:
-    * get_acab(args, nc_racmo2p0, nc_base, base)
+    * acab_epsg3413(args, nc_racmo2p0, nc_base, base)
+    * acab_bamber(args, nc_racmo2p0, nc_base, base)
 
 Notes
 -----
+WARNING: THIS DATASET IS SHIFTED SOUTH RELATIVE TO GREENLAND. DO NOT USE.
+
 This data is from Ian Howat. No grid or projection information is
 included with the NetCDF file, but it appears to use the same grid 
 (albeit transposed) and projection as the Bamber DEM:

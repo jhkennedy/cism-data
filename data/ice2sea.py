@@ -11,7 +11,7 @@ Notes
 -----
 This data is associated with deliverable 3.2.8 of the Ice2Sea project.
 
-The data uses the same projection as the Bamber DEM:
+The data uses the Bamber DEM projection:
     * Polar stereographic
     * WGS84 ellipsoid
     * Standard parallel = 71 degrees

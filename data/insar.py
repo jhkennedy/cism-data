@@ -22,7 +22,7 @@ More information can be found at:
 
 http://nsidc.org/data/docs/measures/nsidc0478_joughin/index.html
 
-The data uses the ESPG:3413 projection which is different than the Bamber DEM:
+The data uses the ESPG:3413 projection:
     * Polar stereographic
     * WGS84 ellipsoid
     * Standard parallel = 70 degrees
@@ -111,7 +111,6 @@ def velocity_epsg3413(args, nc_insar, nc_base, base):
         copy_atts(nc_insar.variables[var], base.var)
         base.var.grid_mapping = 'epsg_3413'
         base.var.coordinates = 'lon lat'
-
 
 
 def velocity_bamber(args, nc_insar, nc_base, trans):

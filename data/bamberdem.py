@@ -11,7 +11,7 @@ Functions list:
 
 Notes
 -----
-The data uses the same projection:
+The data uses the Bamber DEM projection:
     * Polar stereographic
     * WGS84 ellipsoid
     * Standard parallel = 71 degrees

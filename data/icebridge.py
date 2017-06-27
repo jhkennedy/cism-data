@@ -18,7 +18,7 @@ More information can be found at:
 
 http://nsidc.org/data/docs/daac/icebridge/idbmg4/index.html
 
-The data uses the ESPG:3413 projection which is different than the Bamber DEM:
+The data uses the ESPG:3413 projection:
     * Polar stereographic
     * WGS84 ellipsoid
     * Standard parallel = 70 degrees
