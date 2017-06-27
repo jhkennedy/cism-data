@@ -9,6 +9,7 @@ from util import speak
 from util import finalize
 from util import projections
 from util.ncfunc import get_nc_file
+from util import custom_argparse_types as cats
 
 """
 Build a CISM dataset
@@ -16,6 +17,7 @@ Build a CISM dataset
 #==== Data Locations ====
 # Link data here or edit 
 #========================
+#FIXME: Centralize data location vars so users only have to edit this info once
 lc_bamber   = 'data/BamberDEM/Greenland_bedrock_topography_V3.nc'
 lc_seaRise  = 'data/SeaRise/Greenland1km.nc'
 lc_racmo2p0 = 'data/RACMO2.0/Racmo2MeanSMB_1961-1990.nc'
@@ -34,7 +36,10 @@ f_base = 'templates/greenland_1km.mcb.nc'
 # parse the command line arguments
 parser = argparse.ArgumentParser()   # -h or --help automatically included!
 
-parser.add_argument('-e', '--extended', help='Produce the extended grid.', action='store_true')
+parser.add_argument('-s', '--shrink', 
+        type=cats.abs_existing_file,
+        default='data/BamberDEM/Bambergrid_shrunk.json',
+        help='JSON description of the shrunken grid specs. Use plot_grids.py to create this file.')
 
 volume = parser.add_mutually_exclusive_group()
 volume.add_argument("-v", "--verbose", help="Increase the output verbosity", action="store_true")
@@ -51,6 +56,8 @@ speak.notquiet(args,"Loading the datasets.")
 from data import bamberdem
 nc_bamber = get_nc_file(lc_bamber,'r')
 speak.verbose(args,"   Found Bamber DEM")
+f_shrink = abs_existing_file(args.shirnk)
+speak.verbose(args,'   Found shrunken Bamber grid specs')
     
 from data import searise
 nc_seaRise = get_nc_file(lc_seaRise,'r')
@@ -168,7 +175,7 @@ speak.notquiet(args,"\nAdding the time dimension and creating the 1km dataset.")
 f_1km      = 'complete/greenland_1km_'+stamp+'.mcb.nc'
 f_template = 'greenland.mcb.config'
 
-finalize.add_time_and_shrink(args, 'bamber', f_base, f_1km, f_template)
+finalize.add_time_and_shrink(args, 'bamber', f_base, f_1km, f_template, f_shink)
 
 #==== Coarsen ==== 
 # make 2, 4 and 8  

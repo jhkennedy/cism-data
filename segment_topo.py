@@ -3,7 +3,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
-import sys
 import argparse
 
 import numpy as np
@@ -14,24 +13,18 @@ from shapely.geometry import Point, shape
 from util import speak
 from util import projections
 from util.ncfunc import get_nc_file
+from util import custom_argparse_types as cats
 
 RHO_OCEAN = 1027. # kg/m^3
 RHO_ICE = 917.    # kg/m^3
 R_RHO = RHO_ICE/RHO_OCEAN
-
-def abs_existing_file(file):
-    file = os.path.abspath(file)
-    if not os.path.isfile(file):
-        print("Error! File does not exist: \n    "+file)
-        sys.exit(1)
-    return file
 
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description=__doc__, 
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)   
 
-    parser.add_argument('-i', '--input', type=abs_existing_file,
+    parser.add_argument('-i', '--input', type=cats.abs_existing_file,
             default='templates/greenland_1km.epsg3413.nc',
             help='NetCDF dataset with topg variable to segment.')
     parser.add_argument('-a', '--altitude', type=float, default=-200.,
@@ -179,4 +172,3 @@ def main(args):
 
 if __name__ == '__main__':
     main(parse_args())
-

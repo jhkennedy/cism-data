@@ -1,7 +1,10 @@
 #!/usr/bin/env python2
 
+"""
+Build a CISM dataset
+"""
+
 import os
-import sys
 import datetime
 import subprocess
 import argparse
@@ -10,34 +13,7 @@ from util import speak
 from util import finalize
 from util import projections
 from util.ncfunc import get_nc_file
-
-"""
-Build a CISM dataset
-"""
-
-def mkdir_p(path):
-    """
-    Make parent directories as needed and no error if existing. Works like `mkdir -p`.
-    """
-    try:
-        os.makedirs(path)
-    except OSError as exc: # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else: raise
-
-def abs_creation_dir(path):
-    path = os.path.abspath(path)
-    if not os.path.isdir(path):
-        mkdir_p(path)
-    return path
-
-def abs_existing_file(file):
-    file = os.path.abspath(file)
-    if not os.path.isfile(file):
-        print("Error! File does not exist: \n    "+file)
-        sys.exit(1)
-    return file
+from util import custom_argparse_types as cats
 
 #==== Data Locations ====
 # Link data here or edit 
@@ -64,12 +40,12 @@ f_template = 'templates/greenland.epsg3413.config'
 parser = argparse.ArgumentParser()   # -h or --help automatically included!
 
 parser.add_argument('-s', '--shrink', 
-        type=abs_existing_file,
+        type=cats.abs_existing_file,
         default='data/EPSG3413/EPSG3413grid_shrunk.json',
         help='JSON description of the shrunken grid specs. Use plot_grids.py to create this file.')
 
 parser.add_argument('-o', '--out-dir',
-        type=abs_creation_dir,
+        type=cats.abs_creation_dir,
         default=os.path.join(os.getcwd(), 'complete'),
         help='Location to output complete datasets.')
 
@@ -91,9 +67,9 @@ speak.notquiet(args,  '=========================================================
 speak.notquiet(args,'Loading the datasets.')
 
 from data import epsg3413
-f_epsg = abs_existing_file(lc_epsg)
+f_epsg = cats.abs_existing_file(lc_epsg)
 speak.verbose(args,'   Found EPSG:3413 grid specs')
-f_epsg_shr = args.shrink
+f_shrink = cats.abs_existing_file(args.shrink)
 speak.verbose(args,'   Found shrunken EPSG:3413 grid specs')
 
 from data import bamberdem
@@ -208,7 +184,7 @@ if not args.use_template:
 # shrink to size around ice sheet 
 #=================================
 speak.notquiet(args,'\nAdding the time dimension and creating the 1km dataset.')
-finalize.add_time_and_shrink(args, 'epsg_3413', f_base, f_1km, f_template, f_epsg_shr)
+finalize.add_time_and_shrink(args, 'epsg_3413', f_base, f_1km, f_template, f_shrink)
 
 #==== Coarsen ==== 
 # make 2, 4 and 8  

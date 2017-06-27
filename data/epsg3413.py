@@ -7,7 +7,7 @@ from util import projections
 
 
 def build_base(f_base, f_epsg, d_meters):
-    proj_epsg3413, _ = projections.Greenland()
+    proj_epsg3413, _ = projections.greenland()
     
     with open(f_epsg, 'r') as f:
         epsg = json.load(f)

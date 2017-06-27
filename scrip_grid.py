@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
+"""
+Create a SCRIP formatted grid.
+"""
+
 import os
 import sys
-import math
 import argparse
 import numpy as np
 
@@ -10,23 +13,7 @@ from netCDF4 import Dataset
 from shapely.geometry import shape
 
 from util import projections
-
-"""
-Create a SCRIP formatted grid.
-"""
-
-SURFACE_AREA_EARTH = 510065621724000.0  # unit: m^2
-# source: http://home.vikenfiber.no/humrum/WGS84_Eng.html
-SQR_DEG_ON_SPHERE = 41252.96            # unit: deg^2
-SQR_RAD_ON_SPHERE = 4.*math.pi          # unit rad^2
-
-
-def abs_existing_file(file):
-    file = os.path.abspath(file)
-    if not os.path.isfile(file):
-        print("Error! File does not exist: \n    "+file)
-        sys.exit(1)
-    return file
+from util import custom_argparse_types as cats
 
 
 def parse_args(args=None):
@@ -34,7 +21,7 @@ def parse_args(args=None):
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('-i', '--input',
-                        type=abs_existing_file,
+                        type=cats.abs_existing_file,
                         help='NetCDF dataset to build a SCRIP grid for.')
     parser.add_argument('-d', '--dims', nargs=2,
                         default=['y1', 'x1'],
@@ -175,7 +162,7 @@ def main(args):
     scrip.corner_lon.units = 'degrees'
 
     scrip.area = nc_scrip.createVariable('grid_area', 'f4', ('grid_size',))
-    scrip.area[:] = (base.area[:]/SURFACE_AREA_EARTH)*SQR_DEG_ON_SPHERE
+    scrip.area[:] = (base.area[:]/projections.SURFACE_AREA_EARTH)*projections.SQR_DEG_ON_SPHERE
     scrip.area.units = 'square degrees'
 
     nc_base.close()

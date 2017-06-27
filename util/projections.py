@@ -11,8 +11,14 @@ Functions list:
 """
 
 import os
+import math
 import scipy
 import pyproj
+
+SURFACE_AREA_EARTH = 510065621724000.0  # unit: m^2
+# source: http://home.vikenfiber.no/humrum/WGS84_Eng.html
+SQR_DEG_ON_SPHERE = 41252.96            # unit: deg^2
+SQR_RAD_ON_SPHERE = 4.*math.pi          # unit rad^2
 
 
 class DataGrid():

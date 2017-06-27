@@ -12,13 +12,10 @@ bild_Bamber_greenland.py
         projection information
         CF-compliance
 
-scrip_grid.py
-    make entirely independent
-
+segment_topo.py
+    Work with Bamber or EPSG
 
 build_*
-    Remove redundant:
-        add_time(), coarsen() in data/bamberdem.py and data/epsg3413.py can be combined and placed in util (they aren't grid specific).
     combine
     Fix:
         Conservative interpolation?
@@ -31,7 +28,6 @@ All:
     Python 2 and 3 compatibility
     clean up the python
     PEP8 conformance
-    numpy vs as np
     use bar script from my process gist to make the status bars 
     complicated prints to "".format()
     parallelize
@@ -42,4 +38,7 @@ Document:
     All files
     check all comments
     check all current documentation
+
+RIGHT NOW:
+    json for locations!
 
