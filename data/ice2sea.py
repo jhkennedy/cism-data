@@ -26,10 +26,10 @@ The data uses the Bamber DEM projection:
 The data is on the 3001 x 2501 Bamber DEM grid.
 
 References
-----------
-Rastner, P., Bolch, T., and Paul, F. (2011): 2011 ... final steps towards the 
-first complete glacier inventory for Greenland, Geophys. Res. Abstr., 13, 
-EGU2011-13192
+---------- 
+Rastner, P., Bolch, T., Mölg, N., Machguth, H., Le Bris, R., and Paul, F.: The
+first complete inventory of the local glaciers and ice caps on Greenland, The
+Cryosphere, 6, 1483-1495, doi:10.5194/tc-6-1483-2012, 2012.
 """
 
 from util import speak
