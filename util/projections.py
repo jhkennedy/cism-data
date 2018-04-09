@@ -79,17 +79,10 @@ def transform(base, proj1, proj2):
 
 
 def greenland():
-    """The projections and tranformation grids for Greenland.
+    """The projections and transformation grids for Greenland.
 
-    This function creates the proj projections and a transformed DataGrid() for
+    This function creates the proj4 projections and a transformed DataGrid() for
     Greenland.
-
-    Parameters
-    ----------
-    args :
-        Namespace() object holding parsed command line arguments.
-    lc_bamber :
-        Location of the Bamber dataset.
 
     Returns
     -------
@@ -102,7 +95,7 @@ def greenland():
     # NOTE: NSIDC sea ice polar stereographic north
     proj_epsg3413 = pyproj.Proj('+proj=stere +lat_ts=70.0 +lat_0=90 +lon_0=-45.0 +k_0=1.0 +x_0=0.0 +y_0=0.0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
     # NOTE: WGS84 Arctic polar stereographic
-    proj_epsg3995 = pyproj.Proj('+proj=stere +lat_0=90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
+    # proj_epsg3995 = pyproj.Proj('+proj=stere +lat_0=90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs')
 
     # EIGEN-GL04C referenced data:
     # ----------------------------
@@ -118,7 +111,7 @@ def greenland():
     # proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +x_0=800000.0 +y_0=3400000.0 +geoidgrids='+path_bamber+'/egm08_25.gtx')
     proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_ts=71.0 +lat_0=90 +lon_0=321.0 +k_0=1.0 +geoidgrids='+path_egm08)
 
-    return (proj_epsg3413, proj_eigen_gl04c)
+    return proj_epsg3413, proj_eigen_gl04c
 
 
 def equal_area(min_lat, max_lat, lon_0):

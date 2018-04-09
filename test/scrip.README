@@ -10,7 +10,7 @@ Here's the simplest test case:
  
 (1) Create a script that maps the new grid onto itself, like this: [scrip.sh]
  
-(2) Put this in a checkout of cime on yellowstone (you can clone the latest master fromhttps://github.com/ESMCI/cime), in cime/tools/mapping/gen_mapping_files/gen_ESMF_mapping_file . Call the new file regrid_cism.sh
+(2) Put this in a checkout of cime on yellowstone (you can clone the latest master from https://github.com/ESMCI/cime), in cime/tools/mapping/gen_mapping_files/gen_ESMF_mapping_file . Call the new file regrid_cism.sh
  
 (3) Run
  

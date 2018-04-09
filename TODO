@@ -2,6 +2,11 @@ build_EPSG3413_greenland.py
     rework interpolation of icebridge data... slow. May have to hand code linear interp
     encorporate more data to fill missing corners
 
+    NOTE: topg outside ice sheet is from GIMP DEM (same as Bamber), worth seeing if it's in the same projection
+
+    Update to BedMachine Greenland V3 (2017) http://sites.uci.edu/morlighem/dataproducts/bedmachine-greenland/
+
+
 bild_Bamber_greenland.py
     Remove CKTree as it's incredibly slow
     still need fields:
@@ -12,8 +17,10 @@ bild_Bamber_greenland.py
         projection information
         CF-compliance
 
+
 segment_topo.py
     Work with Bamber or EPSG
+
 
 build_*
     combine
@@ -33,11 +40,13 @@ All:
     parallelize
         move all base netCDF opperation to single module for parallelization
 
+
 Document:
     All functions
     All files
     check all comments
     check all current documentation
+
 
 RIGHT NOW:
     json for locations!
