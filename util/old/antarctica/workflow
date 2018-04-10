@@ -1,0 +1,14 @@
+#!/bin/bash
+
+rm *.nc || exit -1
+gcc -I /opt/netcdf4.3.0/include/ -I /opt/proj4/include/ -L /opt/netcdf4.3.0/lib/ -L /opt/proj4/lib/ coordtrans.c -lproj -lnetcdf && ./a.out || exit -1
+python convert_binary_500m.py || exit -1
+python coarsen2x.py || exit -1
+python add_time_dim.py || exit -1
+rm antarctica_?km.nc
+mv antarctica_500m_time.nc "antarctica_500m_`date "+%Y_%m_%d"`.nc" || exit -1
+mv antarctica_1km_time.nc "antarctica_1km_`date "+%Y_%m_%d"`.nc" || exit -1
+mv antarctica_2km_time.nc "antarctica_2km_`date "+%Y_%m_%d"`.nc" || exit -1
+mv antarctica_4km_time.nc "antarctica_4km_`date "+%Y_%m_%d"`.nc" || exit -1
+mv antarctica_8km_time.nc "antarctica_8km_`date "+%Y_%m_%d"`.nc" || exit -1
+
