@@ -128,7 +128,7 @@ def coarsen(args, proj_name, f_base, f_template, coarse_list):
     base.x = nc_base.variables['x1']
     base.nx = base.x[:].shape[0]
 
-    base.proj = nc_base.variables[proj_name]
+    #base.proj = nc_base.variables[proj_name]
     
     for skip in coarse_list :
         coarse = DataGrid()
@@ -157,8 +157,8 @@ def coarsen(args, proj_name, f_base, f_template, coarse_list):
         coarse.x[:] = base.x[::skip]
         coarse.time[0] = 0.
 
-        coarse.proj = nc_coarse.createVariable(proj_name, 'b')
-        copy_atts(base.proj, coarse.proj)
+        #coarse.proj = nc_coarse.createVariable(proj_name, 'b')
+        #copy_atts(base.proj, coarse.proj)
 
         for var_name, var_data in nc_base.variables.iteritems() : 
             if var_name not in  ['time', 'x1', 'y1', 'lat', 'lon', proj_name]:
@@ -178,4 +178,4 @@ def coarsen(args, proj_name, f_base, f_template, coarse_list):
         # write config files
         speak.verbose(args,"   Writing the "+str(skip)+" km config file.")
         
-        config.write(f_coarse, f_template, coarse, skip)
+        # config.write(f_coarse, f_template, coarse, skip)

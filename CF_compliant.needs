@@ -49,7 +49,7 @@ variables:
         bheatflx:source = "http://ciei.colorado.edu/~nshapiro/MODEL/ASC_VERSION/index.html" ;
         bheatflx:comments = "Natgridd\'s linear natural neighbor algorithm was used for interpolation." ;
         bheatflx:long_name = "Basal Heat Flux" ;
-        bheatflx:standard_name = "upward_geothermal_flux_at_ice_base" ;
+        bheatflx:standard_name = "upward_geothermal_flux_at_ice_base" ; # FIXME: Should be downward
         bheatflx:units = "watts/meter^2" ;
         bheatflx:missing_value = -9999. ;
         bheatflx:coordinates = "lon lat" ;
@@ -70,7 +70,7 @@ variables:
         acab:grid_mapping = "epsg_3413" ;
         acab:coordinates = "lon lat" ;
         acab:source = "Ian Howat" ;
-       acab:reference: "" ; #FIXME!
+        acab:reference: "" ; #FIXME!
         acab:comments = "1961--1990 mean surface mass balance from RACMO 2.0 " ;
     float vy(time, y1, x1) ;
         vy:units = "meters/year" ;

@@ -42,20 +42,18 @@ class DataGrid():
         self.dx = self.x[1]-self.x[0]
 
 
-def grid_center_latlons(nc_base, base, proj):
-    base.lon_grid = nc_base.createVariable('lon', 'f4', ('y', 'x',))
+def grid_center_latlons(nc_base, base, proj, proj_var_name):
+    base.lon_grid = nc_base.createVariable('lon', 'f4', ('y1', 'x1',))
     base.lon_grid.long_name = 'grid center longitude'
     base.lon_grid.standard_name = 'longitude'
     base.lon_grid.units = 'degrees_east'
-    base.lon_grid.grid_mapping = 'epsg_3413'
-    base.lon_grid.source = 'Joseph H. Kennedy, ORNL'
+    base.lon_grid.grid_mapping = proj_var_name
 
-    base.lat_grid = nc_base.createVariable('lat', 'f4', ('y', 'x',))
+    base.lat_grid = nc_base.createVariable('lat', 'f4', ('y1', 'x1',))
     base.lat_grid.long_name = 'grid center latitude'
     base.lat_grid.standard_name = 'latitude'
     base.lat_grid.units = 'degrees_north'
-    base.lat_grid.grid_mapping = 'epsg_3413'
-    base.lat_grid.source = 'Joseph H. Kennedy, ORNL'
+    base.lat_grid.grid_mapping = proj_var_name
 
     lon_grid, lat_grid = proj(base.x_grid.ravel(), base.y_grid.ravel(), inverse=True)
     lon_grid.shape = base.x_grid.shape
@@ -63,6 +61,8 @@ def grid_center_latlons(nc_base, base, proj):
 
     base.lon_grid[:, :] = lon_grid
     base.lat_grid[:, :] = lat_grid
+
+    return nc_base, base
 
 
 def transform(base, proj1, proj2):
@@ -137,7 +137,7 @@ def antarctica():
 
     proj_eigen_gl04c = pyproj.Proj('+proj=stere +lat_0=-90 +lat_ts=71.0 +lon_0=0.0 +k_0=1.0 +geoidgrids='+path_egm08)
 
-    return (proj_epsg3412, proj_eigen_gl04c)
+    return proj_epsg3412, proj_epsg3031, proj_eigen_gl04c
 
 
 def proj_string(proj):
