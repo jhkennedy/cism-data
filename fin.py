@@ -5,26 +5,20 @@
 Build the antarctica dataset quick and dirty like based on an old version
 """
 
-import shutil
-import scipy.interpolate
 
-import numpy as np
+import argparse
 
-from argparse import Namespace
-from datetime import datetime
-
-from util import ncfunc
-from util import projections
 from util import finalize
 
-
-f_1km = 'antarctica_1km_2018_04_13.nc'
-f_template = ''
-coarse_list = [2, 4, 5, 8]
-args = Namespace()
+parser = argparse.ArgumentParser()
+parser.add_argument('-c', '--coarse-list', type=int, nargs='+',
+        help='Coarsen the 1 km dataset to this resolution (in km).')
+args = parser.parse_args()
 args.quite = True
 args.verbose = False
 
+f_1km = 'antarctica_1km_2018_04_20.nc'
+f_template = ''
 
-finalize.coarsen(args, 'epsg_3413', f_1km, f_template, coarse_list)
+finalize.coarsen(args, 'epsg_3031', f_1km, f_template, args.coarse_list)
 

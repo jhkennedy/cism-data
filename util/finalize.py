@@ -121,14 +121,13 @@ def coarsen(args, proj_name, f_base, f_template, coarse_list):
     nc_base = Dataset(f_base,'r' )
     
     base = DataGrid()
-     
+    base.time = nc_base.variables['time']
     base.y = nc_base.variables['y1']
     base.ny = base.y[:].shape[0]
-
     base.x = nc_base.variables['x1']
     base.nx = base.x[:].shape[0]
 
-    #base.proj = nc_base.variables[proj_name]
+    base.proj = nc_base.variables[proj_name]
     
     for skip in coarse_list :
         coarse = DataGrid()
@@ -142,6 +141,8 @@ def coarsen(args, proj_name, f_base, f_template, coarse_list):
         speak.verbose(args,"   Writing "+f_coarse)
         
         nc_coarse = Dataset( f_coarse,'w', format='NETCDF4' )
+        copy_atts(nc_base, nc_coarse)
+
         nc_coarse.createDimension('time', None )
         nc_coarse.createDimension('y1', coarse.ny)
         nc_coarse.createDimension('x1', coarse.nx)
@@ -150,6 +151,7 @@ def coarsen(args, proj_name, f_base, f_template, coarse_list):
         coarse.y    = nc_coarse.createVariable('y1',   'f4', ('y1',)  )
         coarse.x    = nc_coarse.createVariable('x1',   'f4', ('x1',)  )
 
+        copy_atts(base.time, coarse.time)
         copy_atts(base.y, coarse.y)
         copy_atts(base.x, coarse.x)
 
@@ -157,10 +159,10 @@ def coarsen(args, proj_name, f_base, f_template, coarse_list):
         coarse.x[:] = base.x[::skip]
         coarse.time[0] = 0.
 
-        #coarse.proj = nc_coarse.createVariable(proj_name, 'b')
-        #copy_atts(base.proj, coarse.proj)
+        coarse.proj = nc_coarse.createVariable(proj_name, 'c')
+        copy_atts(base.proj, coarse.proj)
 
-        for var_name, var_data in nc_base.variables.iteritems() : 
+        for var_name, var_data in nc_base.variables.iteritems():
             if var_name not in  ['time', 'x1', 'y1', 'lat', 'lon', proj_name]:
                 var_coarse = nc_coarse.createVariable(var_name, 'f4', ('time','y1','x1',))
                 var_coarse[0,:,:] = var_data[0,::skip,::skip]

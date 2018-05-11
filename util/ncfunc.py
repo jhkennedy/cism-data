@@ -17,7 +17,7 @@ def get_nc_file(fname, rw) :
     """Get a netcdf file.
     """
     if os.path.exists(fname):
-        nc_file = Dataset( fname, rw, format='NETCDF4') 
+        nc_file = Dataset(fname, rw, format='NETCDF4')
     else:
         raise Exception("Can't find:  "+fname)
     return nc_file
