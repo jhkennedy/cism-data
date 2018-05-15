@@ -17,7 +17,7 @@ args = parser.parse_args()
 args.quite = True
 args.verbose = False
 
-f_1km = 'antarctica_1km_2018_04_20.nc'
+f_1km = 'antarctica_1km_2018_05_14.nc'
 f_template = ''
 
 finalize.coarsen(args, 'epsg_3031', f_1km, f_template, args.coarse_list)
