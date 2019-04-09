@@ -21,7 +21,7 @@ from util import finalize
 
 FILL = True
 
-f_1km = 'antarctica_1km_2018_05_14.nc'
+f_1km = 'antarctica_1km_2018_05_16.nc'
 f_template = ''
 coarse_list = [2, 4, 5, 8]
 args = Namespace()
@@ -299,10 +299,15 @@ cryosat.zgma = cryosat.dhdt[~cryosat.dhdt.mask]
 cryosat.txgma, cryosat.tygma = pyproj.transform(epsg3412, epsg3031, cryosat.xgma.flatten(), cryosat.ygma.flatten())
 dhdt_interp = scipy.interpolate.griddata(zip(cryosat.tygma, cryosat.txgma), cryosat.zgma.flatten(), (new.y_grid, new.x_grid), method='linear')
 
-msk_uw = nc_new.variables['topg'][-1,:,:] < np.nextafter(0., 1.)
-msk_ic = nc_new.variables['thk'][-1,:,:] > np.nextafter(0., 1.)
-msk = np.logical_and(msk_uw, ~msk_ic)
-dhdt = np.ma.masked_where(msk, dhdt_interp)
+
+msk_ice = nc_new.variables['thk'][-1,:,:] > np.nextafter(0., 1.)
+msk_grounded = np.logical_and(msk_ice,
+                              (-1023./917.) * nc_new.variables['topg'][-1,:,:] < np.nextafter(nc_new.variables['thk'][-1,:,:], nc_new.variables['thk'][-1,:,:] + 1.))
+msk_polehole = nc_new.variables['lat'] < np.nextafter(-88., 1.)
+msk = np.logical_and(msk_grounded, msk_ice)
+msk = np.logical_and(msk, msk_polehole)
+
+dhdt = np.ma.masked_where(~msk_grounded, dhdt_interp)
 
 nc_new.createVariable('dhdt', 'f4', ('time', 'y1', 'x1',))
 if FILL:
@@ -312,7 +317,7 @@ else:
 nc_new.variables['dhdt'].long_name = "observed thickness tendency"
 nc_new.variables['dhdt'].standard_name = "tendency_of_land_ice_thickness"
 nc_new.variables['dhdt'].units = "m year-1"
-# FIXME nc_new.variables['dhdt'].ancillary_variables = "dhdterr"
+nc_new.variables['dhdt'].ancillary_variables = "dhdterr"
 nc_new.variables['dhdt'].grid_mapping = "epsg_3031"
 nc_new.variables['dhdt'].coordinates = "lon lat"
 nc_new.variables['dhdt'].source = "M. McMillan and A. Shepherd"
@@ -321,7 +326,21 @@ nc_new.variables['dhdt'].comments = "As per the request of the authors (M. McMil
 if not FILL:
     nc_new.variables['dhdt'].missing_value = -9999.
 
-# FIXME dhdterr?
+
+dhdterr = np.zeros(new.x_grid.shape)
+dhdterr[~msk] = 1.10  # m/year
+dhdterr[~msk] = 1.10  # m/year
+
+nc_new.createVariable('dhdterr', 'f4', ('time', 'y1', 'x1',))
+nc_new.variables['dhdt'].long_name = "observed thickness tendency uncertainty"
+nc_new.variables['dhdt'].standard_name = "tendency_of_land_ice_thickness standard_error"
+nc_new.variables['dhdt'].units = "m year-1"
+nc_new.variables['dhdt'].grid_mapping = "epsg_3031"
+nc_new.variables['dhdt'].coordinates = "lon lat"
+nc_new.variables['dhdt'].source = "M. McMillan and A. Shepherd"
+nc_new.variables['dhdt'].reference = "Mcmillan, M., A. Shepherd, A. Sundal, K. Briggs, A. Muir, A. Ridout, A. Hogg, and D. Wingham, 2014: Increased ice losses from Antarctica detected by CryoSat-2. Geophys. Res. Lett, doi:10.1002/2014GL060111."
+nc_new.variables['dhdt'].comments = "Uncertainty estimates over the ice sheet proper, exlcuding the pole-hole and ice shelves, represent the std deviation of the difference between CryoSat and airborn altimetry. Over the pole-hole and ice-shelves where data is missing, we've doubled the uncertainty."
+
 
 nc_new.close()
 nc_berr.close()

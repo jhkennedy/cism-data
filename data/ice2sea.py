@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 data.ice2sea : Ice2Sea data import module.
 
